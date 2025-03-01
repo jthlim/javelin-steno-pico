@@ -101,7 +101,13 @@ void St7789::St7789Data::Initialize() {
   }
 #endif
 
+#if JAVELIN_PICO_PLATFORM == 2350
+  spi_init(JAVELIN_DISPLAY_SPI, 150'000'000);
+#elif JAVELIN_PICO_PLATFORM == 2040
   spi_init(JAVELIN_DISPLAY_SPI, 125'000'000);
+#else
+#error Unsupported platform
+#endif
 
   gpio_init(JAVELIN_DISPLAY_MISO_PIN);
   gpio_set_function(JAVELIN_DISPLAY_MISO_PIN, GPIO_FUNC_SPI);
@@ -139,11 +145,11 @@ void St7789::St7789Data::Initialize() {
   SendCommand(St7789Command::DISPLAY_INVERSION_ON);
   SendCommand(St7789Command::SET_DISPLAY_MODE_NORMAL, NULL, 0);
 
+  sleep_ms(10);
+
   // Clear buffer on startup.
-  // Commented out as it seems to start in a cleared state.
-  // dirty = true;
-  // Update();
-  // dma4->WaitUntilComplete();
+  SendScreenData();
+  dma4->WaitUntilComplete();
 
   SendCommand(St7789Command::DISPLAY_ON, NULL, 0);
 
@@ -592,6 +598,10 @@ void St7789::St7789Data::Update() {
       ButtonScriptId::DISPLAY_OVERLAY);
 
   dirty = false;
+  SendScreenData();
+}
+
+void St7789::St7789Data::SendScreenData() const {
 
   constexpr int xOffset = (240 - JAVELIN_DISPLAY_SCREEN_WIDTH) / 2;
   constexpr int yOffset = (320 - JAVELIN_DISPLAY_SCREEN_HEIGHT) / 2;
@@ -601,10 +611,7 @@ void St7789::St7789Data::Update() {
   SendCommand(St7789Command::MEMORY_WRITE);
 
   gpio_put(JAVELIN_DISPLAY_DC_PIN, 1);
-  SendScreenData();
-}
 
-void St7789::St7789Data::SendScreenData() const {
   dma4->source = buffer32;
   dma4->destination = &spi_get_hw(JAVELIN_DISPLAY_SPI)->dr;
   dma4->count = sizeof(buffer32) / 2;

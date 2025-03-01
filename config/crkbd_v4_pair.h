@@ -63,10 +63,10 @@ const size_t BUTTON_COUNT = 46;
 
 #define JAVELIN_ENCODER 1
 #define JAVELIN_ENCODER_COUNT 4
-#define JAVELIN_ENCODER_LOCAL_OFFSET 2
+#define JAVELIN_ENCODER_LEFT_COUNT 2
 #define JAVELIN_ENCODER_SPEED 2
 
-constexpr EncoderPins ENCODER_PINS[] = {{24, 7}, {6, 7}};
+constexpr EncoderPins ENCODER_PINS[] = {{5, 7}, {6, 7}, {24, 7}, {6, 7}};
 
 const char *const MANUFACTURER_NAME = "foostan";
 const char *const PRODUCT_NAME = "Corne (Javelin)";

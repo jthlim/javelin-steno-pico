@@ -36,8 +36,8 @@ class Pinnacle
 #endif
 {
 public:
-  static void Initialize();
-  static void Uninitialize();
+  static void Initialize() { instance.InitializeInternal(); }
+  static void Uninitialize() { instance.UninitializeInternal(); }
 
   static void Update() { instance.UpdateInternal(); }
   static void PrintInfo();
@@ -53,14 +53,21 @@ public:
 #endif
   }
 
-  static void WriteRegister(PinnacleRegister reg, int value);
-  static int ReadRegister(PinnacleRegister reg);
-  static void ReadRegisters(PinnacleRegister startingReg, uint8_t *result,
-                            size_t length);
+  static void WriteRegister(int chipSelectPin, PinnacleRegister reg, int value);
+  static int ReadRegister(int chipSelectPin, PinnacleRegister reg);
+  static void ReadRegisters(int chipSelectPin, PinnacleRegister startingReg,
+                            uint8_t *result, size_t length);
 
-  static void ClearFlags();
+  static void ClearFlags(int chipSelectPin);
 
 private:
+  uint8_t localPointerCount;
+#if JAVELIN_SPLIT
+  uint8_t localPointerOffset;
+#else
+  static const size_t localPointerOffset = 0;
+#endif
+
   bool available;
   struct Data {
     bool isDirty;
@@ -68,9 +75,12 @@ private:
   };
   Data data[JAVELIN_POINTER_COUNT];
 
+  void InitializeInternal();
+  void UninitializeInternal();
   void UpdateInternal();
 
   void OnDataReceived(const void *data, size_t length);
+  bool ShouldTransmitData() const;
   void UpdateBuffer(TxBuffer &buffer);
 
   static void CallScript(size_t pointerIndex, const Pointer &pointer);

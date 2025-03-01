@@ -47,7 +47,12 @@ public:
 private:
   PicoEncoderState();
 
-  size_t localEncoderCount;
+  uint8_t localEncoderCount;
+#if JAVELIN_SPLIT
+  uint8_t localEncoderOffset;
+#else
+  static const size_t localEncoderOffset = 0;
+#endif
 
   int8_t deltas[JAVELIN_ENCODER_COUNT];
   int8_t lastLUT[JAVELIN_ENCODER_COUNT];

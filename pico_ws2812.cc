@@ -65,7 +65,7 @@ void Ws2812::Initialize() {
     dma1->count = JAVELIN_RGB_LEFT_COUNT;
   #else
     dma1->count = Split::IsLeft() ? JAVELIN_RGB_LEFT_COUNT
-                                  : JAVELIN_RGB_SLAVE_COUNT;
+                                  : JAVELIN_RGB_RIGHT_COUNT;
   #endif
 #else
   dma1->count = JAVELIN_RGB_COUNT;
@@ -90,7 +90,7 @@ void Ws2812::Ws2812Data::Update() {
 
 #if JAVELIN_SPLIT
   dma1->sourceTrigger =
-      Split::IsMaster() ? pixelValues : pixelValues + JAVELIN_RGB_LEFT_COUNT;
+      Split::IsLeft() ? pixelValues : pixelValues + JAVELIN_RGB_LEFT_COUNT;
 #else
   dma1->sourceTrigger = &pixelValues;
 #endif

@@ -1,15 +1,14 @@
 //---------------------------------------------------------------------------
 
-#include "javelin/orthography.h"
-#include "pico_spinlock.h"
+#pragma once
+#include <stdint.h>
 
 //---------------------------------------------------------------------------
 
-#if USE_ORTHOGRAPHY_CACHE
-
-void StenoCompiledOrthography::LockCache() { spinlock19->Lock(); }
-void StenoCompiledOrthography::UnlockCache() { spinlock19->Unlock(); }
-
-#endif
+struct PinnaclePins {
+  uint8_t chipSelectPin;
+  bool invertX = false;
+  bool invertY = false;
+};
 
 //---------------------------------------------------------------------------

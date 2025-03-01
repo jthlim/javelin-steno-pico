@@ -18,6 +18,11 @@
 
 PicoEncoderState PicoEncoderState::instance;
 
+#if JAVELIN_SPLIT
+#define JAVELIN_ENCODER_RIGHT_COUNT                                            \
+  (JAVELIN_ENCODER_COUNT - JAVELIN_ENCODER_LEFT_COUNT)
+#endif
+
 //---------------------------------------------------------------------------
 
 void EncoderPins::Initialize() const {
@@ -38,7 +43,19 @@ int EncoderPins::ReadState() const {
 //---------------------------------------------------------------------------
 
 PicoEncoderState::PicoEncoderState()
-    : localEncoderCount(sizeof(ENCODER_PINS) / sizeof(*ENCODER_PINS)) {}
+#if JAVELIN_SPLIT
+#if JAVELIN_ENCODER_LEFT_COUNT == JAVELIN_ENCODER_RIGHT_COUNT
+    : localEncoderCount(JAVELIN_ENCODER_LEFT_COUNT),
+#else
+    : localEncoderCount(Split::IsLeft() ? JAVELIN_ENCODER_LEFT_COUNT
+                                        : JAVELIN_ENCODER_RIGHT_COUNT),
+#endif
+      localEncoderOffset(Split::IsLeft() ? 0 : JAVELIN_ENCODER_LEFT_COUNT)
+#else // JAVELIN_SPLIT
+    : localEncoderCount(sizeof(ENCODER_PINS) / sizeof(*ENCODER_PINS))
+#endif
+{
+}
 
 void PicoEncoderState::InitializeInternal() {
 
@@ -75,16 +92,17 @@ void PicoEncoderState::InitializeInternal() {
   // clang-format on
 
   for (size_t i = 0; i < localEncoderCount; ++i) {
-    ENCODER_PINS[i].Initialize();
+    ENCODER_PINS[i + localEncoderOffset].Initialize();
   }
 
   busy_wait_us_32(20);
 
   for (size_t i = 0; i < localEncoderCount; ++i) {
-    Mem::Copy(encoderLUT[i + JAVELIN_ENCODER_LOCAL_OFFSET],
-              (const int8_t *)INITIAL_DELTA_LUT, 16);
-    const int state = ENCODER_PINS[i].ReadState();
-    lastEncoderStates[i] = ENCODER_PINS[i].ReadState();
+    lastEncoderStates[i] = ENCODER_PINS[i + localEncoderOffset].ReadState();
+  }
+
+  for (size_t i = 0; i < JAVELIN_ENCODER_COUNT; ++i) {
+    Mem::Copy(encoderLUT[i], (const int8_t *)INITIAL_DELTA_LUT, 16);
   }
 }
 
@@ -102,21 +120,23 @@ void PicoEncoderState::CallScript(size_t encoderIndex, int delta) {
 
 void PicoEncoderState::UpdateNoScriptCallInternal() {
   for (size_t i = 0; i < localEncoderCount; ++i) {
-    const uint8_t newValue = ENCODER_PINS[i].ReadState();
-    const uint8_t lastValue = lastEncoderStates[i].GetDebouncedState();
-    const Debounced<uint8_t> debounced = lastEncoderStates[i].Update(newValue);
+    const uint8_t newValue = ENCODER_PINS[i + localEncoderOffset].ReadState();
+    const uint8_t lastValue =
+        lastEncoderStates[i + localEncoderOffset].GetDebouncedState();
+    const Debounced<uint8_t> debounced =
+        lastEncoderStates[i + localEncoderOffset].Update(newValue);
     if (!debounced.isUpdated) {
       continue;
     }
 
-    const int newLutValue = encoderLUT[JAVELIN_ENCODER_LOCAL_OFFSET + i]
-                                      [lastValue | (newValue << 2)];
-    const int lastLutValue = lastLUT[i];
+    const int newLutValue =
+        encoderLUT[i + localEncoderOffset][lastValue | (newValue << 2)];
+    const int lastLutValue = lastLUT[i + localEncoderOffset];
     if (newLutValue & lastLutValue) {
       const int delta = newLutValue >> 4;
-      deltas[JAVELIN_ENCODER_LOCAL_OFFSET + i] += delta;
+      deltas[i + localEncoderOffset] += delta;
     }
-    lastLUT[i] = newLutValue;
+    lastLUT[i + localEncoderOffset] = newLutValue;
   }
 }
 
@@ -126,10 +146,11 @@ void PicoEncoderState::UpdateInternal() {
 #if JAVELIN_SPLIT && !JAVELIN_SPLIT_IS_MASTER
 
   for (size_t i = 0; i < localEncoderCount; ++i) {
-    const int delta = deltas[JAVELIN_ENCODER_LOCAL_OFFSET + i];
-    if (delta != lastDeltas[i]) {
-      CallScript(JAVELIN_ENCODER_LOCAL_OFFSET + i, delta - lastDeltas[i]);
-      lastDeltas[i] = delta;
+    const int delta = deltas[i + localEncoderOffset];
+    if (delta != lastDeltas[i + localEncoderOffset]) {
+      CallScript(i + localEncoderOffset,
+                 delta - lastDeltas[i + localEncoderOffset]);
+      lastDeltas[i + localEncoderOffset] = delta;
     }
   }
 
@@ -161,8 +182,16 @@ void PicoEncoderState::OnDataReceived(const void *data, size_t length) {
 }
 
 void PicoEncoderState::OnReceiveConnected() {
-  for (size_t i = localEncoderCount; i < JAVELIN_ENCODER_COUNT; ++i) {
-    SendConfigurationInfoToPair(i);
+  if (Split::IsLeft()) {
+    for (size_t i = JAVELIN_ENCODER_LEFT_COUNT; i < JAVELIN_ENCODER_COUNT;
+         ++i) {
+      SendConfigurationInfoToPair(i);
+    }
+
+  } else {
+    for (size_t i = 0; i < JAVELIN_ENCODER_LEFT_COUNT; ++i) {
+      SendConfigurationInfoToPair(i);
+    }
   }
 }
 
@@ -193,8 +222,16 @@ bool PicoEncoderState::SetConfiguration(size_t encoderIndex,
   Mem::Clear(lastLUT);
 
 #if JAVELIN_SPLIT && JAVELIN_SPLIT_IS_MASTER
-  if (encoderIndex >= localEncoderCount && Connection::IsPairConnected()) {
-    SendConfigurationInfoToPair(encoderIndex);
+  if (Connection::IsPairConnected()) {
+    if (Split::IsLeft()) {
+      if (encoderIndex >= JAVELIN_ENCODER_LEFT_COUNT) {
+        SendConfigurationInfoToPair(encoderIndex);
+      }
+    } else {
+      if (encoderIndex < JAVELIN_ENCODER_LEFT_COUNT) {
+        SendConfigurationInfoToPair(encoderIndex);
+      }
+    }
   }
 #endif
 

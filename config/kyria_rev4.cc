@@ -69,6 +69,8 @@ void preButtonStateInitialize() {
     BUTTON_PIN_MASK = 1 << JAVELIN_ENCODER_UNUSED_PIN;
     PicoEncoderState::SetLocalEncoderCount(1);
   }
+#else
+  PicoEncoderState::SetLocalEncoderCount(1);
 #endif
 }
 

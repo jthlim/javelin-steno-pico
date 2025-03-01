@@ -3,6 +3,7 @@
 #pragma once
 #include "encoder_pins.h"
 #include "main_flash_layout.h"
+#include "pinnacle_pins.h"
 
 //---------------------------------------------------------------------------
 
@@ -55,18 +56,21 @@ bool shouldUseDisplayModule();
 #endif
 
 #if USE_CIRQUE_TRACKPAD
+
 #define JAVELIN_POINTER 0x73a
 #define JAVELIN_POINTER_SPI spi1
 #define JAVELIN_POINTER_MISO_PIN 12
-#define JAVELIN_POINTER_CS_PIN 13
 #define JAVELIN_POINTER_SCK_PIN 14
 #define JAVELIN_POINTER_MOSI_PIN 15
 
-#define JAVELIN_POINTER_INVERT_X 1
-#define JAVELIN_POINTER_INVERT_Y 1
-
 #define JAVELIN_POINTER_COUNT 2
-#define JAVELIN_POINTER_LOCAL_OFFSET 0
+#define JAVELIN_POINTER_LEFT_COUNT 1
+
+const PinnaclePins PINNACLE_PINS[2] = {
+    {.chipSelectPin = 13, .invertX = true, .invertY = true},
+    {.chipSelectPin = 13},
+};
+
 #endif
 
 #define JAVELIN_BUTTON_MATRIX 1
@@ -144,20 +148,20 @@ constexpr uint8_t RGB_MAP[62] = {
 extern uint32_t BUTTON_PIN_MASK;
 extern uint8_t BUTTON_PINS[1];
 
-constexpr EncoderPins ENCODER_PINS[] = {{23, 22}, {27, 26}};
+constexpr EncoderPins ENCODER_PINS[] = {{23, 22}, {27, 26}, {23, 22}, {27, 26}};
 
 void preButtonStateInitialize();
 #define JAVELIN_PRE_BUTTON_STATE_INITIALIZE preButtonStateInitialize();
 
 #else
 
-constexpr EncoderPins ENCODER_PINS[] = {{23, 22}};
+constexpr EncoderPins ENCODER_PINS[] = {{23, 22}, {23, 22}};
 
 #endif
 
 #define JAVELIN_ENCODER 1
 #define JAVELIN_ENCODER_COUNT 4
-#define JAVELIN_ENCODER_LOCAL_OFFSET 0
+#define JAVELIN_ENCODER_LEFT_COUNT 2
 #define JAVELIN_ENCODER_SPEED 2
 
 const size_t BUTTON_COUNT = 52;
