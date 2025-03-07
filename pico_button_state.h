@@ -2,7 +2,7 @@
 
 #pragma once
 #include "javelin/button_state.h"
-#include "javelin/cyclic_queue.h"
+#include "javelin/container/cyclic_queue.h"
 #include "javelin/debounce.h"
 
 //---------------------------------------------------------------------------

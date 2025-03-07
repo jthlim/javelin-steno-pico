@@ -6,6 +6,110 @@
 
 //---------------------------------------------------------------------------
 
+#if JAVELIN_PICO_PLATFORM == 2350
+
+enum class PicoDmaTransferRequest : uint32_t {
+  PIO0_TX0 = 0,
+  PIO0_TX1,
+  PIO0_TX2,
+  PIO0_TX3,
+  PIO0_RX0,
+  PIO0_RX1,
+  PIO0_RX2,
+  PIO0_RX3,
+  PIO1_TX0,
+  PIO1_TX1,
+  PIO1_TX2,
+  PIO1_TX3,
+  PIO1_RX0,
+  PIO1_RX1,
+  PIO1_RX2,
+  PIO1_RX3,
+  PIO2_TX0,
+  PIO2_TX1,
+  PIO2_TX2,
+  PIO2_TX3,
+  PIO2_RX0,
+  PIO2_RX1,
+  PIO2_RX2,
+  PIO2_RX3,
+  SPI0_TX,
+  SPI0_RX,
+  SPI1_TX,
+  SPI1_RX,
+  UART0_TX,
+  UART0_RX,
+  UART1_TX,
+  UART1_RX,
+  PWM_WRAP0,
+  PWM_WRAP1,
+  PWM_WRAP2,
+  PWM_WRAP3,
+  PWM_WRAP4,
+  PWM_WRAP5,
+  PWM_WRAP6,
+  PWM_WRAP7,
+  PWM_WRAP8,
+  PWM_WRAP9,
+  PWM_WRAP10,
+  PWM_WRAP11,
+  I2C0_TX,
+  I2C0_RX,
+  I2C1_TX,
+  I2C1_RX,
+  ADC,
+  XIP_STREAM,
+  XIP_QMITX,
+  XIP_QMIRX,
+  XIP_HSTX,
+  XIP_CORESIGHT,
+  XIP_SHA256,
+  TIMER_0 = 0x3b,
+  TIMER_1 = 0x3c,
+  TIMER_2 = 0x3d,
+  TIMER_3 = 0x3e,
+  PERMANENT = 0x3f,
+};
+
+struct PicoDmaControl {
+
+  enum class DataSize : uint32_t {
+    BYTE = 0,
+    HALF_WORD = 1,
+    WORD = 2,
+  };
+
+  uint32_t enable : 1;
+  uint32_t highPriority : 1;
+  DataSize dataSize : 2;
+  uint32_t incrementRead : 1;
+  uint32_t incrementReadReverse : 1;
+  uint32_t incrementWrite : 1;
+  uint32_t incrementWriteReverse : 1;
+  uint32_t ringSizeShift : 4;
+  uint32_t ringSel : 1;
+
+  // Set to the channel being used to disable chaining.
+  uint32_t chainToDma : 4;
+
+  PicoDmaTransferRequest transferRequest : 6;
+  uint32_t quietIrq : 1;
+  uint32_t bswap : 1;
+  uint32_t sniffEnable : 1;
+  uint32_t busy : 1;
+  uint32_t _reserved27 : 2;
+  uint32_t writeError : 1;
+  uint32_t readError : 1;
+  uint32_t ahbError : 1;
+
+  void operator=(const PicoDmaControl &control) volatile {
+    *(volatile uint32_t *)this = *(uint32_t *)&control;
+  }
+};
+static_assert(sizeof(PicoDmaControl) == 4, "Unexpected DmaControl size");
+
+#elif JAVELIN_PICO_PLATFORM == 2040
+
 enum class PicoDmaTransferRequest : uint32_t {
   PIO0_TX0 = 0,
   PIO0_TX1,
@@ -53,49 +157,6 @@ enum class PicoDmaTransferRequest : uint32_t {
   TIMER_3 = 0x3e,
   PERMANENT = 0x3f,
 };
-
-//---------------------------------------------------------------------------
-
-#if JAVELIN_PICO_PLATFORM == 2350
-
-struct PicoDmaControl {
-
-  enum class DataSize : uint32_t {
-    BYTE = 0,
-    HALF_WORD = 1,
-    WORD = 2,
-  };
-
-  uint32_t enable : 1;
-  uint32_t highPriority : 1;
-  DataSize dataSize : 2;
-  uint32_t incrementRead : 1;
-  uint32_t incrementReadReverse : 1;
-  uint32_t incrementWrite : 1;
-  uint32_t incrementWriteReverse : 1;
-  uint32_t ringSizeShift : 4;
-  uint32_t ringSel : 1;
-
-  // Set to the channel being used to disable chaining.
-  uint32_t chainToDma : 4;
-
-  PicoDmaTransferRequest transferRequest : 6;
-  uint32_t quietIrq : 1;
-  uint32_t bswap : 1;
-  uint32_t sniffEnable : 1;
-  uint32_t busy : 1;
-  uint32_t _reserved27 : 2;
-  uint32_t writeError : 1;
-  uint32_t readError : 1;
-  uint32_t ahbError : 1;
-
-  void operator=(const PicoDmaControl &control) volatile {
-    *(volatile uint32_t *)this = *(uint32_t *)&control;
-  }
-};
-static_assert(sizeof(PicoDmaControl) == 4, "Unexpected DmaControl size");
-
-#elif JAVELIN_PICO_PLATFORM == 2040
 
 struct PicoDmaControl {
 
@@ -169,7 +230,13 @@ struct PicoDmaAbort {
   void Abort(int channelIndex) { value = (1 << channelIndex); }
 };
 
+#if JAVELIN_PICO_PLATFORM == 2350
+static PicoDmaAbort *const dmaAbort = (PicoDmaAbort *)0x50000464;
+#elif JAVELIN_PICO_PLATFORM == 2040
 static PicoDmaAbort *const dmaAbort = (PicoDmaAbort *)0x50000444;
+#else
+#error Unsupported platform
+#endif
 
 //---------------------------------------------------------------------------
 
@@ -229,12 +296,21 @@ static PicoDma *const dma9 = (PicoDma *)0x50000240;
 static PicoDma *const dma10 = (PicoDma *)0x50000280;
 static PicoDma *const dma11 = (PicoDma *)0x500002c0;
 
+#if JAVELIN_PICO_PLATFORM == 2350
+static volatile uint32_t *const dmaTimer0 = (uint32_t *)0x50000440;
+static volatile uint32_t *const dmaTimer1 = (uint32_t *)0x50000444;
+static volatile uint32_t *const dmaTimer2 = (uint32_t *)0x50000448;
+static volatile uint32_t *const dmaTimer3 = (uint32_t *)0x5000044c;
+#elif JAVELIN_PICO_PLATFORM == 2040
 // Upper 16 bits = numerator.
 // Lower 16 bits = denominator.
 static volatile uint32_t *const dmaTimer0 = (uint32_t *)0x50000420;
 static volatile uint32_t *const dmaTimer1 = (uint32_t *)0x50000424;
 static volatile uint32_t *const dmaTimer2 = (uint32_t *)0x50000428;
 static volatile uint32_t *const dmaTimer3 = (uint32_t *)0x5000042c;
+#else
+#error Unsupported Platform
+#endif
 
 //---------------------------------------------------------------------------
 

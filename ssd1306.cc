@@ -13,7 +13,6 @@
 #include <string.h>
 
 //---------------------------------------------------------------------------
-
 #if JAVELIN_DISPLAY_DRIVER == 1306
 
 //---------------------------------------------------------------------------
@@ -130,19 +129,7 @@ void Ssd1306::WaitForI2cTxReady() {
 
 void Ssd1306::SendDmaBuffer(size_t count) {
   dma4->count = count;
-  dma4->source = dmaBuffer;
-  dma4->destination = &JAVELIN_OLED_I2C->hw->data_cmd;
-
-  constexpr PicoDmaControl dmaControl = {
-      .enable = true,
-      .dataSize = PicoDmaControl::DataSize::HALF_WORD,
-      .incrementRead = true,
-      .incrementWrite = false,
-      .chainToDma = 4,
-      .transferRequest = PicoDmaTransferRequest::I2C1_TX,
-      .sniffEnable = false,
-  };
-  dma4->controlTrigger = dmaControl;
+  dma4->sourceTrigger = dmaBuffer;
 }
 
 void Ssd1306::PrintInfo() {
@@ -569,6 +556,19 @@ void Ssd1306::Ssd1306Data::Initialize() {
   gpio_set_function(JAVELIN_OLED_SCL_PIN, GPIO_FUNC_I2C);
   gpio_pull_up(JAVELIN_OLED_SDA_PIN);
   gpio_pull_up(JAVELIN_OLED_SCL_PIN);
+
+  dma4->destination = &JAVELIN_OLED_I2C->hw->data_cmd;
+
+  constexpr PicoDmaControl dmaControl = {
+      .enable = true,
+      .dataSize = PicoDmaControl::DataSize::HALF_WORD,
+      .incrementRead = true,
+      .incrementWrite = false,
+      .chainToDma = 4,
+      .transferRequest = PicoDmaTransferRequest::I2C1_TX,
+      .sniffEnable = false,
+  };
+  dma4->control = dmaControl;
 
   available = InitializeSsd1306();
   if (!available) {

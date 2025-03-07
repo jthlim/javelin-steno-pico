@@ -3,7 +3,7 @@
 #pragma once
 #include JAVELIN_BOARD_CONFIG
 #include "javelin/button_state.h"
-#include "javelin/cyclic_queue.h"
+#include "javelin/container/cyclic_queue.h"
 #include "javelin/debounce.h"
 #include "javelin/split/split.h"
 #include "javelin/static_allocate.h"

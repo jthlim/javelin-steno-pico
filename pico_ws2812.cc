@@ -14,8 +14,8 @@
 
 //---------------------------------------------------------------------------
 
-const PIO PIO_INSTANCE = pio0;
-const int STATE_MACHINE_INDEX = 2;
+const PIO PIO_INSTANCE = pio1;
+const int STATE_MACHINE_INDEX = 0;
 
 #if JAVELIN_SPLIT
 #define JAVELIN_RGB_RIGHT_COUNT (JAVELIN_RGB_COUNT - JAVELIN_RGB_LEFT_COUNT)
@@ -54,7 +54,7 @@ void Ws2812::Initialize() {
       .incrementRead = true,
       .incrementWrite = false,
       .chainToDma = 1,
-      .transferRequest = PicoDmaTransferRequest::PIO0_TX2,
+      .transferRequest = PicoDmaTransferRequest::PIO1_TX0,
       .sniffEnable = false,
   };
   dma1->control = dmaControl;

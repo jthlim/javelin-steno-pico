@@ -258,8 +258,8 @@ int main(void) {
   InitMulticore();
 #endif
   PicoCrc32::Initialize();
-  Ws2812::Initialize();
   PicoSplit::Initialize();
+  Ws2812::Initialize();
   Pinnacle::Initialize();
   Ssd1306::Initialize();
   St7789::Initialize();

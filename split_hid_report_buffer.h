@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "javelin/queue.h"
+#include "javelin/container/queue.h"
 #include "javelin/split/split.h"
 
 //---------------------------------------------------------------------------

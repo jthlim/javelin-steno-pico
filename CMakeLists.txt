@@ -12,13 +12,14 @@ add_definitions(
   -DJAVELIN_BOARD_CONFIG=\"config/${JAVELIN_BOARD}.h\"
   -DJAVELIN_PLATFORM_PICO_SDK=1
   -DJAVELIN_THREADS=1
-  -DJAVELIN_SPLIT_VERSION_INCREMENT=2
+  -DJAVELIN_SPLIT_VERSION_INCREMENT=3
   -DNDEBUG=1
   -DPICO_FLASH_SIZE_BYTES=0x1000000
   -DPICO_FLASH_SPI_CLKDIV=4
   -DPICO_MALLOC_PANIC=0
   -DPICO_NO_FPGA_CHECK=1
   -DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
+  -DPICO_USE_FASTEST_SUPPORTED_CLOCK=1
 )
 
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
@@ -101,6 +102,7 @@ target_sources(${NAME} PUBLIC
   javelin/button_script_manager.cc
   javelin/console.cc
   javelin/console_input_buffer.cc
+  javelin/container/list.cc
   javelin/crc32.cc
   javelin/dictionary/compact_map_dictionary.cc
   javelin/dictionary/debug_dictionary.cc
@@ -141,6 +143,7 @@ target_sources(${NAME} PUBLIC
   javelin/hal/bootloader.cc
   javelin/hal/connection.cc
   javelin/hal/display.cc
+  javelin/hal/gpio.cc
   javelin/hal/mouse.cc
   javelin/hal/power.cc
   javelin/hal/rgb.cc
@@ -150,7 +153,6 @@ target_sources(${NAME} PUBLIC
   javelin/key.cc
   javelin/key_code.cc
   javelin/key_press_parser.cc
-  javelin/list.cc
   javelin/mem.cc
   javelin/orthography.cc
   javelin/pattern.cc
@@ -190,6 +192,7 @@ target_sources(${NAME} PUBLIC
   javelin/stroke.cc
   javelin/stroke_history.cc
   javelin/stroke_list_parser.cc
+  javelin/system.cc
   javelin/timer_manager.cc
   javelin/unicode.cc
   javelin/utf8_pointer.cc

@@ -21,6 +21,7 @@
 #include "javelin/hal/bootloader.h"
 #include "javelin/hal/connection.h"
 #include "javelin/hal/display.h"
+#include "javelin/hal/gpio.h"
 #include "javelin/hal/rgb.h"
 #include "javelin/host_layout.h"
 #include "javelin/orthography.h"
@@ -39,6 +40,7 @@
 #include "javelin/script_storage.h"
 #include "javelin/split/split_console.h"
 #include "javelin/static_allocate.h"
+#include "javelin/system.h"
 #include "javelin/word_list.h"
 #include "main_report_builder.h"
 #include "pico_divider.h"
@@ -135,18 +137,17 @@ static void PrintInfo_Binding(void *context, const char *commandLine) {
   const uint32_t days = totalHoursDivider.quotient;
 
   Console::Printf("System\n");
-  const uint32_t systemClockKhz =
-      frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
-  const uint32_t systemMhz = divider->Divide(systemClockKhz, 1000).quotient;
+  const uint32_t systemClockMhz =
+      frequency_count_mhz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
 
 #if JAVELIN_PICO_PLATFORM == 2350
 #if __riscv
-  Console::Printf("  CPU: RP2350 RISC-V %u MHz\n", systemMhz);
+  Console::Printf("  CPU: RP2350 RISC-V %u MHz\n", systemClockMhz);
 #else
-  Console::Printf("  CPU: RP2350 ARM %u MHz\n", systemMhz);
+  Console::Printf("  CPU: RP2350 ARM %u MHz\n", systemClockMhz);
 #endif
 #elif JAVELIN_PICO_PLATFORM == 2040
-  Console::Printf("  CPU: RP2040 %u MHz\n", systemMhz);
+  Console::Printf("  CPU: RP2040 %u MHz\n", systemClockMhz);
 #else
 #error Unsupported platform
 #endif
@@ -391,6 +392,12 @@ static void GetStenoMode() {
   }
 }
 
+#if JAVELIN_USE_EMBEDDED_STENO
+static void GetStenoSystem() {
+  Console::Printf("%s\n\n", SYSTEM_ADDRESS->layout);
+}
+#endif
+
 static void GetStenoTrigger() {
   const StenoProcessorElement *trigger = triggerContainer->GetNext();
   if (trigger == &allUpContainer.value) {
@@ -420,6 +427,9 @@ static constexpr DynamicParameterData DYNAMIC_PARAMETER_DATA[] = {
     {"space_position", GetSpacePosition},
 #endif
     {"steno_mode", GetStenoMode},
+#if JAVELIN_USE_EMBEDDED_STENO
+    {"steno_system", GetStenoSystem},
+#endif
     {"steno_trigger", GetStenoTrigger},
 #if JAVELIN_USE_EMBEDDED_STENO
     {"stroke_count", GetStrokeCount},
@@ -507,6 +517,7 @@ void InitCommonCommands() {
                           ListParametersBinding, nullptr);
 
   Flash::AddConsoleCommands(console);
+  Gpio::AddConsoleCommands(console);
   Rgb::AddConsoleCommands(console);
   Bootloader::AddConsoleCommands(console);
   ButtonScriptManager::GetInstance().AddConsoleCommands(console);
@@ -537,6 +548,7 @@ void InitJavelinMaster() {
       config->hidCompatibilityMode);
   HostLayouts::SetData(*HOST_LAYOUTS_ADDRESS);
   WordList::instance.SetData(*(const WordListData *)STENO_WORD_LIST_ADDRESS);
+  StenoStroke::SetLanguage(SYSTEM_ADDRESS->keys);
 
   memcpy(StenoKeyState::STROKE_BIT_INDEX_LOOKUP, config->keyMap,
          sizeof(config->keyMap));
@@ -558,7 +570,7 @@ void InitJavelinMaster() {
 
   new (dictionaryListContainer) StenoDictionaryList(dictionaries);
   new (compiledOrthographyContainer)
-      StenoCompiledOrthography(*ORTHOGRAPHY_ADDRESS);
+      StenoCompiledOrthography(SYSTEM_ADDRESS->orthography);
 
   StenoDictionary *dictionary = &dictionaryListContainer.value;
   if (STENO_MAP_DICTIONARY_COLLECTION_ADDRESS->hasReverseLookup) {
@@ -572,7 +584,7 @@ void InitJavelinMaster() {
 
     List<const uint8_t *> ignoreSuffixes;
     for (const StenoOrthographyAutoSuffix &autoSuffix :
-         ORTHOGRAPHY_ADDRESS->autoSuffixes) {
+         SYSTEM_ADDRESS->orthography.autoSuffixes) {
       const uint8_t *p =
           reverseMapDictionaryContainer->FindMapDataLookup(autoSuffix.text + 1);
       if (p) {
@@ -600,14 +612,14 @@ void InitJavelinMaster() {
   }
 
   // Set up processors.
-  StenoEngine *engine = new (StenoEngine::container)
-      StenoEngine(*dictionary, compiledOrthographyContainer,
+  StenoEngine *engine = new (StenoEngine::container) StenoEngine(
+      *dictionary, compiledOrthographyContainer, SYSTEM_ADDRESS->undoStroke,
 #if JAVELIN_USE_USER_DICTIONARY
-                  userDictionary
+      userDictionary
 #else
-                  nullptr
+      nullptr
 #endif
-      );
+  );
 
   engine->SetSpaceAfter(config->useSpaceAfter);
 #endif
@@ -641,9 +653,8 @@ void InitJavelinMaster() {
   PaperTape::AddConsoleCommands(console);
 #if JAVELIN_USE_EMBEDDED_STENO
   engine->AddConsoleCommands(console);
-  console.RegisterCommand(
-      "print_orthography", "Prints all orthography rules in JSON format",
-      &StenoOrthography::Print_Binding, (void *)ORTHOGRAPHY_ADDRESS);
+  console.RegisterCommand("print_system", "Prints stenography system data",
+                          &StenoSystem::Print_Binding, (void *)SYSTEM_ADDRESS);
 #endif
 
 #if JAVELIN_DISPLAY_DRIVER

@@ -55,6 +55,11 @@ PicoSplit::SplitData::SplitData() {
 }
 
 void PicoSplit::SplitData::Initialize() {
+#if !defined(JAVELIN_SPLIT_IS_LEFT) && defined(JAVELIN_SPLIT_SIDE_PIN)
+  gpio_init(JAVELIN_SPLIT_SIDE_PIN);
+  gpio_set_dir(JAVELIN_SPLIT_SIDE_PIN, false);
+#endif
+
   programOffset = pio_add_program(PIO_INSTANCE, &pico_split_program);
 
 #if JAVELIN_SPLIT_TX_PIN == JAVELIN_SPLIT_RX_PIN
@@ -105,6 +110,33 @@ void PicoSplit::SplitData::Initialize() {
   irq_set_enabled(PIO0_IRQ_0, true);
   pio_set_irq0_source_enabled(PIO_INSTANCE, pis_interrupt0, true);
 
+  dma2->destination = &PIO_INSTANCE->txf[TX_STATE_MACHINE_INDEX];
+  constexpr PicoDmaControl sendControl = {
+      .enable = true,
+      .dataSize = PicoDmaControl::DataSize::WORD,
+      .incrementRead = true,
+      .incrementWrite = false,
+      .chainToDma = 2,
+      .transferRequest = PicoDmaTransferRequest::PIO0_TX0,
+      .sniffEnable = false,
+  };
+  dma2->control = sendControl;
+
+  dma3->source = &PIO_INSTANCE->rxf[RX_STATE_MACHINE_INDEX];
+  constexpr PicoDmaControl receiveControl = {
+    .enable = true,
+    .dataSize = PicoDmaControl::DataSize::WORD,
+    .incrementRead = false,
+    .incrementWrite = true,
+    .chainToDma = 3,
+#if JAVELIN_SPLIT_TX_PIN == JAVELIN_SPLIT_RX_PIN
+    .transferRequest = PicoDmaTransferRequest::PIO0_RX0,
+#else
+    .transferRequest = PicoDmaTransferRequest::PIO0_RX1,
+#endif
+    .sniffEnable = false,
+  };
+  dma3->control = receiveControl;
   if (!IsMaster()) {
     StartRx();
   }
@@ -154,49 +186,21 @@ void PicoSplit::SplitData::StartRx() {
 
 void PicoSplit::SplitData::ResetRxDma() {
   dma3->Abort();
-  dma3->source = &PIO_INSTANCE->rxf[RX_STATE_MACHINE_INDEX];
   dma3->destination = &rxBuffer.header;
-  dma3->count = sizeof(RxBuffer) / sizeof(uint32_t);
-
-  constexpr PicoDmaControl receiveControl = {
-    .enable = true,
-    .dataSize = PicoDmaControl::DataSize::WORD,
-    .incrementRead = false,
-    .incrementWrite = true,
-    .chainToDma = 3,
-#if JAVELIN_SPLIT_TX_PIN == JAVELIN_SPLIT_RX_PIN
-    .transferRequest = PicoDmaTransferRequest::PIO0_RX0,
-#else
-    .transferRequest = PicoDmaTransferRequest::PIO0_RX1,
-#endif
-    .sniffEnable = false,
-  };
-  dma3->controlTrigger = receiveControl;
+  dma3->countTrigger = sizeof(RxBuffer) / sizeof(uint32_t);
 }
 
 void PicoSplit::SplitData::SendTxBuffer() {
   // Since Rx immediately follows Tx, set Rx dma before sending anything.
   ResetRxDma();
 
-  dma2->source = &txBuffer.header;
-  dma2->destination = &PIO_INSTANCE->txf[TX_STATE_MACHINE_INDEX];
   const size_t wordCount = txBuffer.GetWordCount();
   txWords += wordCount;
-  dma2->count = wordCount;
 
   const size_t bitCount = 32 * wordCount;
   pio_sm_put_blocking(PIO_INSTANCE, TX_STATE_MACHINE_INDEX, bitCount - 1);
-
-  constexpr PicoDmaControl sendControl = {
-      .enable = true,
-      .dataSize = PicoDmaControl::DataSize::WORD,
-      .incrementRead = true,
-      .incrementWrite = false,
-      .chainToDma = 2,
-      .transferRequest = PicoDmaTransferRequest::PIO0_TX0,
-      .sniffEnable = false,
-  };
-  dma2->controlTrigger = sendControl;
+  dma2->source = &txBuffer.header;
+  dma2->countTrigger = wordCount;
 }
 
 void PicoSplit::SplitData::OnReceiveFailed() {

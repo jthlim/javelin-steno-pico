@@ -9,7 +9,7 @@
 struct HostLayouts;
 struct ScriptStorageData;
 struct StenoConfigBlock;
-struct StenoOrthography;
+struct StenoSystem;
 struct StenoDictionaryCollection;
 
 //---------------------------------------------------------------------------
@@ -21,8 +21,7 @@ struct StenoDictionaryCollection;
 const StenoConfigBlock *const STENO_CONFIG_BLOCK_ADDRESS =
     (const StenoConfigBlock *)0x1003a000;
 const uint8_t *const SCRIPT_BYTE_CODE = (const uint8_t *)0x1003a100;
-const StenoOrthography *const ORTHOGRAPHY_ADDRESS =
-    (const StenoOrthography *)0x10042000;
+const StenoSystem *const SYSTEM_ADDRESS = (const StenoSystem *)0x10042000;
 const uint8_t *const STENO_WORD_LIST_ADDRESS = (const uint8_t *)0x10044000;
 static const struct HostLayouts *const HOST_LAYOUTS_ADDRESS =
     (struct HostLayouts *)0x103de000;

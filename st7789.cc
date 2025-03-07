@@ -9,6 +9,7 @@
 #include "javelin/thread.h"
 #include "javelin/utf8_pointer.h"
 #include "pico_dma.h"
+#include <hardware/clocks.h>
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
 #include <pico/time.h>
@@ -101,13 +102,9 @@ void St7789::St7789Data::Initialize() {
   }
 #endif
 
-#if JAVELIN_PICO_PLATFORM == 2350
-  spi_init(JAVELIN_DISPLAY_SPI, 150'000'000);
-#elif JAVELIN_PICO_PLATFORM == 2040
-  spi_init(JAVELIN_DISPLAY_SPI, 125'000'000);
-#else
-#error Unsupported platform
-#endif
+  const uint32_t systemClockKhz =
+      frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
+  spi_init(JAVELIN_DISPLAY_SPI, 1000 * systemClockKhz);
 
   gpio_init(JAVELIN_DISPLAY_MISO_PIN);
   gpio_set_function(JAVELIN_DISPLAY_MISO_PIN, GPIO_FUNC_SPI);
@@ -146,6 +143,19 @@ void St7789::St7789Data::Initialize() {
   SendCommand(St7789Command::SET_DISPLAY_MODE_NORMAL, NULL, 0);
 
   sleep_ms(10);
+
+  dma4->destination = &spi_get_hw(JAVELIN_DISPLAY_SPI)->dr;
+  constexpr PicoDmaControl dmaControl = {
+      .enable = true,
+      .dataSize = PicoDmaControl::DataSize::HALF_WORD,
+      .incrementRead = true,
+      .incrementWrite = false,
+      .chainToDma = 4,
+      .transferRequest = PicoDmaTransferRequest::SPI1_TX,
+      .sniffEnable = false,
+  };
+  dma4->count = sizeof(buffer32) / 2;
+  dma4->control = dmaControl;
 
   // Clear buffer on startup.
   SendScreenData();
@@ -612,22 +622,10 @@ void St7789::St7789Data::SendScreenData() const {
 
   gpio_put(JAVELIN_DISPLAY_DC_PIN, 1);
 
-  dma4->source = buffer32;
-  dma4->destination = &spi_get_hw(JAVELIN_DISPLAY_SPI)->dr;
-  dma4->count = sizeof(buffer32) / 2;
   spi_set_format(JAVELIN_DISPLAY_SPI, 16, SPI_CPOL_1, SPI_CPHA_1,
                  SPI_MSB_FIRST);
 
-  constexpr PicoDmaControl dmaControl = {
-      .enable = true,
-      .dataSize = PicoDmaControl::DataSize::HALF_WORD,
-      .incrementRead = true,
-      .incrementWrite = false,
-      .chainToDma = 4,
-      .transferRequest = PicoDmaTransferRequest::SPI1_TX,
-      .sniffEnable = false,
-  };
-  dma4->controlTrigger = dmaControl;
+  dma4->sourceTrigger = buffer32;
 }
 
 //---------------------------------------------------------------------------

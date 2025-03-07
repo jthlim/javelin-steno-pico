@@ -5,8 +5,8 @@
 #pragma once
 #include JAVELIN_BOARD_CONFIG
 #include "javelin/split/split.h"
+#include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 //---------------------------------------------------------------------------
 
