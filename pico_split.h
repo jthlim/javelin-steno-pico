@@ -29,18 +29,14 @@ private:
     bool updateSendData = true;
     bool isConnected = false;
     uint8_t retryCount;
+    uint8_t programOffset;
     uint16_t txId;
     uint16_t lastRxId;
-    uint32_t programOffset;
     uint32_t receiveStartTime;
     uint64_t rxPacketCount;
     uint64_t txIrqCount;
     uint64_t rxWords;
     uint64_t txWords;
-    size_t metrics[SplitMetricId::COUNT];
-
-    TxBuffer txBuffer;
-    RxBuffer rxBuffer;
 
 #if JAVELIN_SPLIT_TX_PIN == JAVELIN_SPLIT_RX_PIN
     pio_sm_config config;
@@ -48,6 +44,10 @@ private:
     pio_sm_config txConfig;
     pio_sm_config rxConfig;
 #endif
+
+    size_t metrics[SplitMetricId::COUNT];
+    TxBuffer txBuffer;
+    RxBuffer rxBuffer;
 
     void Initialize();
     void StartTx();

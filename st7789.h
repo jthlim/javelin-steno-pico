@@ -142,6 +142,8 @@ private:
     struct RunConwayStepThreadData;
 
     union {
+      uint8_t buffer8[2 * JAVELIN_DISPLAY_SCREEN_WIDTH *
+                      JAVELIN_DISPLAY_SCREEN_HEIGHT];
       uint16_t buffer16[JAVELIN_DISPLAY_SCREEN_WIDTH *
                         JAVELIN_DISPLAY_SCREEN_HEIGHT];
       uint32_t buffer32[JAVELIN_DISPLAY_SCREEN_WIDTH *

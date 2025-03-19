@@ -19,7 +19,6 @@ add_definitions(
   -DPICO_MALLOC_PANIC=0
   -DPICO_NO_FPGA_CHECK=1
   -DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
-  -DPICO_USE_FASTEST_SUPPORTED_CLOCK=1
 )
 
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
@@ -29,6 +28,7 @@ if (PICO_PLATFORM STREQUAL "rp2040")
     -DJAVELIN_CPU_CORTEX_M0=1
     -DJAVELIN_USE_CUSTOM_POP_COUNT=1
     -DJAVELIN_PICO_PLATFORM=2040
+    -DSYS_CLK_MHZ=200
   )
   set (SIZE "$ENV{PICO_TOOLCHAIN_PATH}/bin/arm-none-eabi-size")
 elseif (PICO_PLATFORM STREQUAL "rp2350-arm-s")
@@ -57,8 +57,11 @@ pico_sdk_init()
 
 add_executable(${NAME})
 
-pico_generate_pio_header(${NAME} ${CMAKE_CURRENT_LIST_DIR}/pico_split.pio)
-pico_generate_pio_header(${NAME} ${CMAKE_CURRENT_LIST_DIR}/pico_split_tx_rx.pio)
+pico_generate_pio_header(${NAME} ${CMAKE_CURRENT_LIST_DIR}/pico_split_5.pio)
+pico_generate_pio_header(${NAME} ${CMAKE_CURRENT_LIST_DIR}/pico_split_8.pio)
+pico_generate_pio_header(${NAME} ${CMAKE_CURRENT_LIST_DIR}/pico_split_10.pio)
+pico_generate_pio_header(${NAME} ${CMAKE_CURRENT_LIST_DIR}/pico_split_16.pio)
+pico_generate_pio_header(${NAME} ${CMAKE_CURRENT_LIST_DIR}/pico_split_20.pio)
 pico_generate_pio_header(${NAME} ${CMAKE_CURRENT_LIST_DIR}/pico_ws2812.pio)
 
 target_sources(${NAME} PUBLIC

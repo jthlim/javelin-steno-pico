@@ -43,7 +43,6 @@
 #include "javelin/system.h"
 #include "javelin/word_list.h"
 #include "main_report_builder.h"
-#include "pico_divider.h"
 #include "pico_encoder_state.h"
 #include "pico_split.h"
 #include "pinnacle.h"
@@ -122,35 +121,31 @@ extern "C" char __data_start__[], __data_end__[];
 extern "C" char __bss_start__[], __bss_end__[];
 
 static void PrintInfo_Binding(void *context, const char *commandLine) {
-  const uint32_t uptime = Clock::GetMilliseconds();
-  const auto &uptimeDivider = divider->Divide(uptime, 1000);
-  const uint32_t microseconds = uptimeDivider.remainder;
-  const uint32_t totalSeconds = uptimeDivider.quotient;
-  const auto &totalSecondsDivider = divider->Divide(totalSeconds, 60);
-  const uint32_t seconds = totalSecondsDivider.remainder;
-  const uint32_t totalMinutes = totalSecondsDivider.quotient;
-  const auto &totalMinutesDivider = divider->Divide(totalMinutes, 60);
-  const uint32_t minutes = totalMinutesDivider.remainder;
-  const uint32_t totalHours = totalMinutesDivider.quotient;
-  const auto &totalHoursDivider = divider->Divide(totalHours, 24);
-  const uint32_t hours = totalHoursDivider.remainder;
-  const uint32_t days = totalHoursDivider.quotient;
-
   Console::Printf("System\n");
   const uint32_t systemClockMhz =
       frequency_count_mhz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
 
 #if JAVELIN_PICO_PLATFORM == 2350
 #if __riscv
-  Console::Printf("  CPU: RP2350 RISC-V %u MHz\n", systemClockMhz);
+  Console::Printf("  SoC: RP2350 RISC-V %u MHz\n", systemClockMhz);
 #else
-  Console::Printf("  CPU: RP2350 ARM %u MHz\n", systemClockMhz);
+  Console::Printf("  SoC: RP2350 ARM %u MHz\n", systemClockMhz);
 #endif
 #elif JAVELIN_PICO_PLATFORM == 2040
-  Console::Printf("  CPU: RP2040 %u MHz\n", systemClockMhz);
+  Console::Printf("  SoC: RP2040 %u MHz\n", systemClockMhz);
 #else
 #error Unsupported platform
 #endif
+
+  const uint32_t uptime = Clock::GetMilliseconds();
+  const uint32_t totalSeconds = uptime / 1000;
+  const uint32_t microseconds = uptime % 1000;
+  const uint32_t totalMinutes = totalSeconds / 60;
+  const uint32_t seconds = totalSeconds % 60;
+  const uint32_t totalHours = totalMinutes / 60;
+  const uint32_t minutes = totalMinutes % 60;
+  const uint32_t days = totalHours / 24;
+  const uint32_t hours = totalHours % 24;
   Console::Printf("  Uptime: %ud %uh %um %0u.%03us\n", days, hours, minutes,
                   seconds, microseconds);
   // Console::Printf("  Chip version: %u\n", rp2040_chip_version());
@@ -177,11 +172,15 @@ static void PrintInfo_Binding(void *context, const char *commandLine) {
   Console::Printf("Memory\n");
   Console::Printf("  Data: %zu\n", __data_end__ - __data_start__);
   Console::Printf("  BSS: %zu\n", __bss_end__ - __bss_start__);
+  Console::Printf("  Total static allocation: %zu\n",
+                  __bss_end__ - __data_start__);
   const struct mallinfo info = mallinfo();
-  Console::Printf("  Arena: %zu\n", info.arena);
-  Console::Printf("  Free chunks: %zu\n", info.ordblks);
-  Console::Printf("  Used: %zu\n", info.uordblks);
-  Console::Printf("  Free: %zu\n", info.fordblks);
+  Console::Printf("  Dynamic free blocks: %zu\n", info.ordblks);
+  Console::Printf("  Dynamic used: %zu\n", info.uordblks);
+  Console::Printf("  Dynamic free: %zu\n", info.fordblks);
+  Console::Printf("  Total dynamic allocation: %zu\n", info.arena);
+  Console::Printf("  Total allocation: %zu\n",
+                  info.arena + __bss_end__ - __data_start__);
 
   Flash::PrintInfo();
   HidReportBufferBase::PrintInfo();
@@ -266,27 +265,6 @@ void SetStenoTrigger(void *context, const char *commandLine) {
   ButtonScriptManager::ExecuteScript(ButtonScriptId::STENO_MODE_UPDATE);
 }
 
-void SetKeyboardProtocol(void *context, const char *commandLine) {
-  const char *keyboardProtocol = strchr(commandLine, ' ');
-  if (!keyboardProtocol) {
-    Console::Printf("ERR No keyboard protocol specified\n\n");
-    return;
-  }
-
-  ++keyboardProtocol;
-  if (Str::Eq(keyboardProtocol, "default")) {
-    MainReportBuilder::instance.SetCompatibilityMode(false);
-  } else if (Str::Eq(keyboardProtocol, "compatibility")) {
-    MainReportBuilder::instance.SetCompatibilityMode(true);
-  } else {
-    Console::Printf("ERR Unable to set keyboard protocol: \"%s\"\n\n",
-                    keyboardProtocol);
-    return;
-  }
-
-  Console::SendOk();
-}
-
 struct ParameterData {
   const char *name;
   const void *value;
@@ -322,14 +300,6 @@ static const ParameterData PARAMETER_DATA[] = {
     {"script_storage_address", SCRIPT_STORAGE_ADDRESS},
 #endif
 };
-
-#if JAVELIN_USE_EMBEDDED_STENO
-static void GetKeyboardProtocol() {
-  Console::Printf("%s\n\n", MainReportBuilder::instance.IsCompatibilityMode()
-                                ? "compatibility"
-                                : "default");
-}
-#endif
 
 #if defined(JAVELIN_SCRIPT_CONFIGURATION)
 static void GetScriptConfiguration() {
@@ -413,8 +383,8 @@ static constexpr DynamicParameterData DYNAMIC_PARAMETER_DATA[] = {
 #if JAVELIN_USE_EMBEDDED_STENO
     {"available_host_layouts", &HostLayouts::ListHostLayouts},
     {"host_layout", &HostLayouts::GetHostLayout},
-    {"keyboard_protocol", GetKeyboardProtocol},
 #endif
+    {"keyboard_protocol", &MainReportBuilder::GetKeyboardProtocol_Binding},
 #if defined(JAVELIN_SCRIPT_CONFIGURATION)
     {"script_configuration", GetScriptConfiguration},
 #endif
@@ -544,8 +514,7 @@ void InitJavelinMaster() {
   const StenoConfigBlock *config = STENO_CONFIG_BLOCK_ADDRESS;
 
 #if JAVELIN_USE_EMBEDDED_STENO
-  MainReportBuilder::instance.SetCompatibilityMode(
-      config->hidCompatibilityMode);
+  MainReportBuilder::instance.SetConfiguration(config->hidCompatibilityMode);
   HostLayouts::SetData(*HOST_LAYOUTS_ADDRESS);
   WordList::instance.SetData(*(const WordListData *)STENO_WORD_LIST_ADDRESS);
   StenoStroke::SetLanguage(SYSTEM_ADDRESS->keys);
@@ -644,10 +613,7 @@ void InitJavelinMaster() {
       "set_steno_trigger",
       "Sets the current steno trigger [\"first_up\", \"all_up\"]",
       SetStenoTrigger, nullptr);
-  console.RegisterCommand("set_keyboard_protocol",
-                          "Sets the current keyboard protocol "
-                          "[\"default\", \"compatibility\"]",
-                          SetKeyboardProtocol, nullptr);
+  MainReportBuilder::instance.AddConsoleCommands(console);
   console.RegisterCommand("set_host_layout", "Sets the current host layout",
                           &HostLayouts::SetHostLayout_Binding, nullptr);
   PaperTape::AddConsoleCommands(console);
@@ -663,8 +629,6 @@ void InitJavelinMaster() {
                           "\"paper_tape\", \"steno_layout\", \"wpm\"]",
                           StenoStrokeCapture::SetAutoDraw_Binding,
                           &passthroughContainer.value);
-  console.RegisterCommand("measure_text", "Measures the width of text",
-                          &Font::MeasureText_Binding, nullptr);
 #endif
 
 #if JAVELIN_USE_EMBEDDED_STENO

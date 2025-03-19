@@ -1,21 +1,34 @@
 //---------------------------------------------------------------------------
 
 #include "pico_split.h"
+
+//---------------------------------------------------------------------------
+
+#if JAVELIN_SPLIT
+
 #include "javelin/button_script_manager.h"
 #include "javelin/console.h"
 #include "pico_dma.h"
-#if JAVELIN_SPLIT_TX_PIN == JAVELIN_SPLIT_RX_PIN
-#include "pico_split.pio.h"
-#else
-#include "pico_split_tx_rx.pio.h"
-#endif
+#include <hardware/clocks.h>
 #include <hardware/gpio.h>
 #include <hardware/pio.h>
 #include <hardware/timer.h>
 
 //---------------------------------------------------------------------------
 
-#if JAVELIN_SPLIT
+#if JAVELIN_SPLIT_PIO_CYCLES == 20
+#include "pico_split_20.pio.h"
+#elif JAVELIN_SPLIT_PIO_CYCLES == 16
+#include "pico_split_16.pio.h"
+#elif JAVELIN_SPLIT_PIO_CYCLES == 10
+#include "pico_split_10.pio.h"
+#elif JAVELIN_SPLIT_PIO_CYCLES == 8
+#include "pico_split_8.pio.h"
+#elif JAVELIN_SPLIT_PIO_CYCLES == 5
+#include "pico_split_5.pio.h"
+#else
+#error Unsupported JAVELIN_SPLIT_PIO_CYCLES
+#endif
 
 //---------------------------------------------------------------------------
 
@@ -148,8 +161,8 @@ void PicoSplit::SplitData::StartTx() {
   const int pin = JAVELIN_SPLIT_TX_PIN;
 
   pio_sm_set_enabled(pio, sm, false);
-  pio_sm_set_pins_with_mask(pio, sm, 0, 1u << pin);
-  pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+  pio_sm_set_pins_with_mask(pio, sm, 0, 1 << pin);
+  pio_sm_set_pindirs_with_mask(pio, sm, 1 << pin, 1 << pin);
 #if JAVELIN_SPLIT_TX_PIN == JAVELIN_SPLIT_RX_PIN
   pio_sm_init(pio, sm, programOffset + pico_split_offset_tx_start, &config);
 #else
@@ -169,8 +182,7 @@ void PicoSplit::SplitData::StartRx() {
   const int pin = JAVELIN_SPLIT_RX_PIN;
 
   pio_sm_set_enabled(pio, sm, false);
-  pio_sm_set_pins_with_mask(pio, sm, 0, 1u << pin);
-  pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
+  pio_sm_set_pindirs_with_mask(pio, sm, 0, 1 << pin);
 #if JAVELIN_SPLIT_TX_PIN == JAVELIN_SPLIT_RX_PIN
   pio_sm_init(pio, sm, programOffset + pico_split_offset_rx_start, &config);
 #else
@@ -316,7 +328,11 @@ void PicoSplit::SplitData::Update() {
 }
 
 void PicoSplit::SplitData::PrintInfo() {
-  Console::Printf("Split data\n");
+  const uint32_t systemClockMhz =
+      frequency_count_mhz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
+
+  Console::Printf("Split data: %d Mbps\n",
+                  systemClockMhz / JAVELIN_SPLIT_PIO_CYCLES);
   Console::Printf("  Transmitted bytes/packets: %llu/%llu\n", 4 * txWords,
                   txIrqCount);
   Console::Printf("  Received bytes/packets: %llu/%llu\n", 4 * rxWords,
@@ -339,6 +355,9 @@ void PicoSplit::SplitData::PrintInfo() {
 }
 
 void __no_inline_not_in_flash_func(PicoSplit::SplitData::TxIrqHandler)() {
+  if constexpr (TX_STATE_MACHINE_INDEX != RX_STATE_MACHINE_INDEX) {
+    pio_sm_set_enabled(PIO_INSTANCE, TX_STATE_MACHINE_INDEX, false);
+  }
   pio_interrupt_clear(PIO_INSTANCE, TX_STATE_MACHINE_INDEX);
   instance.txIrqCount++;
   instance.state = State::RECEIVING;

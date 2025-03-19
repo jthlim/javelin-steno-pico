@@ -142,9 +142,14 @@ void St7789::St7789Data::Initialize() {
   SendCommand(St7789Command::DISPLAY_INVERSION_ON);
   SendCommand(St7789Command::SET_DISPLAY_MODE_NORMAL, NULL, 0);
 
-  sleep_ms(10);
+  constexpr int xOffset = (240 - JAVELIN_DISPLAY_SCREEN_WIDTH) / 2;
+  constexpr int yOffset = (320 - JAVELIN_DISPLAY_SCREEN_HEIGHT) / 2;
+
+  SetLR(xOffset, xOffset + JAVELIN_DISPLAY_SCREEN_WIDTH - 1);
+  SetTB(yOffset, yOffset + JAVELIN_DISPLAY_SCREEN_HEIGHT - 1);
 
   dma4->destination = &spi_get_hw(JAVELIN_DISPLAY_SPI)->dr;
+  dma4->count = sizeof(buffer32) / 2;
   constexpr PicoDmaControl dmaControl = {
       .enable = true,
       .dataSize = PicoDmaControl::DataSize::HALF_WORD,
@@ -154,12 +159,13 @@ void St7789::St7789Data::Initialize() {
       .transferRequest = PicoDmaTransferRequest::SPI1_TX,
       .sniffEnable = false,
   };
-  dma4->count = sizeof(buffer32) / 2;
   dma4->control = dmaControl;
 
   // Clear buffer on startup.
   SendScreenData();
   dma4->WaitUntilComplete();
+  // After dma is complete, still need the last 16 bits to send.
+  sleep_us(10);
 
   SendCommand(St7789Command::DISPLAY_ON, NULL, 0);
 
@@ -608,23 +614,16 @@ void St7789::St7789Data::Update() {
       ButtonScriptId::DISPLAY_OVERLAY);
 
   dirty = false;
+
   SendScreenData();
 }
 
 void St7789::St7789Data::SendScreenData() const {
-
-  constexpr int xOffset = (240 - JAVELIN_DISPLAY_SCREEN_WIDTH) / 2;
-  constexpr int yOffset = (320 - JAVELIN_DISPLAY_SCREEN_HEIGHT) / 2;
-
-  SetLR(xOffset, xOffset + JAVELIN_DISPLAY_SCREEN_WIDTH - 1);
-  SetTB(yOffset, yOffset + JAVELIN_DISPLAY_SCREEN_HEIGHT - 1);
   SendCommand(St7789Command::MEMORY_WRITE);
 
   gpio_put(JAVELIN_DISPLAY_DC_PIN, 1);
-
   spi_set_format(JAVELIN_DISPLAY_SPI, 16, SPI_CPOL_1, SPI_CPHA_1,
                  SPI_MSB_FIRST);
-
   dma4->sourceTrigger = buffer32;
 }
 
@@ -728,10 +727,10 @@ void St7789::St7789Data::UpdateBuffer(TxBuffer &buffer) {
   } else {
     txData->size = sizeof(St7789TxRxData::data);
   }
-  dma6->Copy32(txData->data, buffer32 + (txData->offset / 4), txData->size / 4);
-  dma6->WaitUntilComplete();
+  dma6->Copy32(txData->data, buffer8 + txData->offset, txData->size / 4);
 
   buffer.Add(SplitHandlerId::DISPLAY_DATA, 8 + txData->size);
+  dma6->WaitUntilComplete();
 }
 
 void St7789::St7789Data::OnDataReceived(const void *data, size_t length) {
@@ -743,12 +742,13 @@ void St7789::St7789Data::OnDataReceived(const void *data, size_t length) {
     return;
   }
 
-  dma6->Copy32(buffer32 + (rxData->offset / 4), rxData->data, rxData->size / 4);
-  dma6->WaitUntilComplete();
+  dma6->Copy32(buffer8 + rxData->offset, rxData->data, rxData->size / 4);
 
   if (rxData->offset + rxData->size >= sizeof(buffer32)) {
     dirty = true;
   }
+
+  dma6->WaitUntilComplete();
 }
 
 //---------------------------------------------------------------------------

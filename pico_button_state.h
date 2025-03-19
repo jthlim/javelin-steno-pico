@@ -23,9 +23,8 @@ private:
   static constexpr size_t QUEUE_COUNT = 64;
 
   uint32_t keyPressedTime;
-  uint32_t rowMasks[2];
-  CyclicQueue<TimedButtonState, QUEUE_COUNT> queue;
   GlobalDeferredDebounce<ButtonState> debouncer;
+  CyclicQueue<TimedButtonState, QUEUE_COUNT> queue;
 
   static PicoButtonState instance;
 

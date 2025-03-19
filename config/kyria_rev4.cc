@@ -63,15 +63,13 @@ bool shouldUseEncoderModule() {
 }
 
 void preButtonStateInitialize() {
-#if USE_HALCYON_ENCODER
   if (!shouldUseEncoderModule()) {
+#if USE_HALCYON_ENCODER
     BUTTON_PINS[0] = JAVELIN_ENCODER_UNUSED_PIN;
     BUTTON_PIN_MASK = 1 << JAVELIN_ENCODER_UNUSED_PIN;
+#endif
     PicoEncoderState::SetLocalEncoderCount(1);
   }
-#else
-  PicoEncoderState::SetLocalEncoderCount(1);
-#endif
 }
 
 //---------------------------------------------------------------------------

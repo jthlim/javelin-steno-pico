@@ -8,6 +8,10 @@
 
 //---------------------------------------------------------------------------
 
+class Console;
+
+//---------------------------------------------------------------------------
+
 struct MainReportBuilder {
 public:
   void Press(uint8_t key);
@@ -29,8 +33,17 @@ public:
     return reportBuffer.GetAvailableBufferCount();
   }
 
-  bool IsCompatibilityMode() const { return compatibilityMode; }
-  void SetCompatibilityMode(bool mode) { compatibilityMode = mode; }
+  void SetConfiguration(uint8_t configurationValue) {
+    if (configurationValue == 0) {
+      compatibilityMode = false;
+      repeatReportCount = 0;
+    } else {
+      compatibilityMode = true;
+      repeatReportCount = configurationValue - 1;
+    }
+  }
+  void AddConsoleCommands(Console &console);
+  static void GetKeyboardProtocol_Binding();
 
   void PrintInfo() const;
 
@@ -87,6 +100,7 @@ private:
   bool compatibilityMode = false;
   uint8_t modifiers = 0;
   uint8_t maxPressIndex = 0;
+  uint8_t repeatReportCount = 0;
   int wpmTally = 0;
   Buffer buffers[2];
   MouseBuffer mouseBuffers[2];
@@ -99,6 +113,11 @@ private:
   void SendKeyboardPageReportIfRequired();
   void SendConsumerPageReportIfRequired();
   void SendMousePageReportIfRequired();
+
+  void SendReport(uint8_t reportId, const uint8_t *data, size_t size);
+
+  static void SetKeyboardProtocol_Binding(void *context,
+                                          const char *commandLine);
 
   friend class SplitHidReportBuffer;
 };

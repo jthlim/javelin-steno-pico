@@ -5,6 +5,8 @@
 #include "javelin/hal/mouse.h"
 #include "javelin/key.h"
 #include "javelin/mem.h"
+#include "javelin/str.h"
+#include "javelin/unicode.h"
 #include "javelin/wpm_tracker.h"
 #include "usb_descriptors.h"
 
@@ -179,8 +181,7 @@ void MainReportBuilder::SendKeyboardPageReportIfRequired() {
     }
   }
 done:
-  reportBuffer.SendReport(KEYBOARD_PAGE_REPORT_ID, reportData,
-                          sizeof(reportData));
+  SendReport(KEYBOARD_PAGE_REPORT_ID, reportData, sizeof(reportData));
 }
 
 void MainReportBuilder::SendConsumerPageReportIfRequired() {
@@ -190,8 +191,7 @@ void MainReportBuilder::SendConsumerPageReportIfRequired() {
     return;
   }
 
-  reportBuffer.SendReport(CONSUMER_PAGE_REPORT_ID, &buffers[0].data[0xa8 / 8],
-                          8);
+  SendReport(CONSUMER_PAGE_REPORT_ID, &buffers[0].data[0xa8 / 8], 8);
 }
 
 void MainReportBuilder::SendMousePageReportIfRequired() {
@@ -199,8 +199,14 @@ void MainReportBuilder::SendMousePageReportIfRequired() {
     return;
   }
 
-  reportBuffer.SendReport(MOUSE_PAGE_REPORT_ID,
-                          (const uint8_t *)&mouseBuffers[0], 12);
+  SendReport(MOUSE_PAGE_REPORT_ID, (const uint8_t *)&mouseBuffers[0], 12);
+}
+
+void MainReportBuilder::SendReport(uint8_t reportId, const uint8_t *data,
+                                   size_t size) {
+  for (size_t i = 0; i <= repeatReportCount; ++i) {
+    reportBuffer.SendReport(reportId, data, size);
+  }
 }
 
 void MainReportBuilder::Flush() {
@@ -306,10 +312,59 @@ void MainReportBuilder::HWheelMouse(int delta) {
 
 //---------------------------------------------------------------------------
 
+void MainReportBuilder::SetKeyboardProtocol_Binding(void *context,
+                                                    const char *commandLine) {
+  const char *keyboardProtocol = strchr(commandLine, ' ');
+  if (!keyboardProtocol) {
+    Console::Printf("ERR No keyboard protocol specified\n\n");
+    return;
+  }
+
+  ++keyboardProtocol;
+  int delay = 0;
+  if (Unicode::IsAsciiDigit(*keyboardProtocol)) {
+    const char *p = Str::ParseInteger(&delay, keyboardProtocol);
+    if (p) {
+      keyboardProtocol = p + 1;
+    }
+  }
+
+  MainReportBuilder *instance = (MainReportBuilder *)context;
+  if (Str::Eq(keyboardProtocol, "default")) {
+    instance->compatibilityMode = false;
+    instance->repeatReportCount = 0;
+  } else if (Str::Eq(keyboardProtocol, "compatibility")) {
+    instance->compatibilityMode = true;
+    instance->repeatReportCount = delay;
+  } else {
+    Console::Printf("ERR Unable to set keyboard protocol: \"%s\"\n\n",
+                    keyboardProtocol);
+    return;
+  }
+
+  Console::SendOk();
+}
+
+void MainReportBuilder::AddConsoleCommands(Console &console) {
+  console.RegisterCommand("set_keyboard_protocol",
+                          "Sets the current keyboard protocol "
+                          "[\"default\", \"compatibility\"]",
+                          &SetKeyboardProtocol_Binding, this);
+}
+
+void MainReportBuilder::GetKeyboardProtocol_Binding() {
+  Console::Printf("%d %s\n\n", instance.repeatReportCount,
+                  instance.compatibilityMode ? "compatibility" : "default");
+}
+
+//---------------------------------------------------------------------------
+
 void MainReportBuilder::PrintInfo() const {
   Console::Printf("Keyboard protocol: %s\n",
                   compatibilityMode ? "compatibility" : "default");
 }
+
+//---------------------------------------------------------------------------
 
 void Key::Press(KeyCode key) { MainReportBuilder::instance.Press(key.value); }
 

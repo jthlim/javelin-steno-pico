@@ -11,16 +11,7 @@
 void PicoCrc32::Initialize() {
   // Writing to ROM address 0 seems to work fine as a no-op.
   dma0->destination = 0;
-}
 
-uint32_t PicoCrc32::Hash(const void *data, size_t length) {
-#if JAVELIN_THREADS
-  spinlock18->Lock();
-#endif
-
-  dma0->source = data;
-
-  sniff->data = 0xffffffff;
   constexpr PicoDmaSniffControl sniffControl = {
       .enable = true,
       .dmaChannel = 0,
@@ -29,6 +20,16 @@ uint32_t PicoCrc32::Hash(const void *data, size_t length) {
       .bitInvertOutput = true,
   };
   sniff->control = sniffControl;
+}
+
+uint32_t PicoCrc32::Hash(const void *data, size_t length, PicoDma *dma) {
+#if JAVELIN_THREADS
+  spinlock18->Lock();
+#endif
+
+  dma->source = data;
+
+  sniff->data = 0xffffffff;
 
   const bool use32BitTransfer = ((intptr_t(data) | length) & 3) == 0;
   PicoDmaControl control;
@@ -43,7 +44,7 @@ uint32_t PicoCrc32::Hash(const void *data, size_t length) {
         .transferRequest = PicoDmaTransferRequest::PERMANENT,
         .sniffEnable = true,
     };
-    control = dmaControl32BitTransfer;
+    dma->control = dmaControl32BitTransfer;
   } else {
     constexpr PicoDmaControl dmaControl8BitTransfer = {
         .enable = true,
@@ -54,12 +55,11 @@ uint32_t PicoCrc32::Hash(const void *data, size_t length) {
         .transferRequest = PicoDmaTransferRequest::PERMANENT,
         .sniffEnable = true,
     };
-    control = dmaControl8BitTransfer;
+    dma->control = dmaControl8BitTransfer;
   }
-  dma0->count = length;
-  dma0->controlTrigger = control;
+  dma->countTrigger = length;
 
-  dma0->WaitUntilComplete();
+  dma->WaitUntilComplete();
   const uint32_t value = sniff->data;
 
 #if JAVELIN_THREADS
@@ -72,7 +72,7 @@ uint32_t PicoCrc32::Hash(const void *data, size_t length) {
 //---------------------------------------------------------------------------
 
 uint32_t Crc32::Hash(const void *v, size_t count) {
-  return PicoCrc32::Hash(v, count);
+  return PicoCrc32::Hash(v, count, dma0);
 }
 
 //---------------------------------------------------------------------------

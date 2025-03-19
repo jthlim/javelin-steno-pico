@@ -3,6 +3,7 @@
 #include "hid_report_buffer.h"
 #include "javelin/clock.h"
 #include "javelin/console.h"
+#include "pico_split.h"
 #include "split_hid_report_buffer.h"
 #include "usb_descriptors.h"
 
@@ -94,6 +95,7 @@ void HidReportBufferBase::PumpUntilNotFull() {
   const size_t startTime = Clock::GetMilliseconds();
   for (;;) {
     tud_task();
+    PicoSplit::Update();
 
     if (!IsFull()) {
       return;
