@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#include "calculate_mask.h"
 #include "encoder_pins.h"
 #include "pair_flash_layout.h"
 
@@ -38,14 +39,14 @@
 #define JAVELIN_BUTTON_MATRIX 1
 
 constexpr uint8_t LEFT_COLUMN_PINS[] = {8, 27, 26, 22, 20, 23, 21};
-constexpr uint32_t LEFT_COLUMN_PIN_MASK = 0x0cf00100;
+constexpr uint32_t LEFT_COLUMN_PIN_MASK = CALCULATE_MASK(LEFT_COLUMN_PINS);
 constexpr uint8_t LEFT_ROW_PINS[] = {4, 5, 6, 7};
-constexpr uint32_t LEFT_ROW_PIN_MASK = 0x000000f0;
+constexpr uint32_t LEFT_ROW_PIN_MASK = CALCULATE_MASK(LEFT_ROW_PINS);
 
 constexpr uint8_t RIGHT_COLUMN_PINS[] = {23, 4, 5, 6, 7, 8, 21};
-constexpr uint32_t RIGHT_COLUMN_PIN_MASK = 0x00a001f0;
+constexpr uint32_t RIGHT_COLUMN_PIN_MASK = CALCULATE_MASK(RIGHT_COLUMN_PINS);
 constexpr uint8_t RIGHT_ROW_PINS[] = {27, 26, 22, 20};
-constexpr uint32_t RIGHT_ROW_PIN_MASK = 0x0c500000;
+constexpr uint32_t RIGHT_ROW_PIN_MASK = CALCULATE_MASK(RIGHT_ROW_PINS);
 
 // clang-format off
 //

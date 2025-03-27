@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#include "calculate_mask.h"
 #include "main_flash_layout.h"
 
 //---------------------------------------------------------------------------
@@ -38,14 +39,9 @@
 #define JAVELIN_BUTTON_MATRIX 1
 
 constexpr uint8_t LEFT_COLUMN_PINS[] = {29, 28, 27, 26, 22, 20};
-constexpr uint32_t LEFT_COLUMN_PIN_MASK = 0x3c500000;
+constexpr uint32_t LEFT_COLUMN_PIN_MASK = CALCULATE_MASK(LEFT_COLUMN_PINS);
 constexpr uint8_t LEFT_ROW_PINS[] = {4, 5, 6, 7};
-constexpr uint32_t LEFT_ROW_PIN_MASK = 0x000000f0;
-
-constexpr uint8_t RIGHT_COLUMN_PINS[] = {20, 22, 26, 27, 28, 29};
-constexpr uint32_t RIGHT_COLUMN_PIN_MASK = 0x3c500000;
-constexpr uint8_t RIGHT_ROW_PINS[] = {4, 5, 6, 7};
-constexpr uint32_t RIGHT_ROW_PIN_MASK = 0x000000f0;
+constexpr uint32_t LEFT_ROW_PIN_MASK = CALCULATE_MASK(LEFT_ROW_PINS);
 
 // clang-format off
 //
@@ -73,13 +69,6 @@ constexpr int8_t LEFT_KEY_MAP[4][6] = {
   {  12, 13, 14, 15, 16, 17, },
   {  24, 25, 26, 27, 28, 29, },
   {  -1, -1, -1, 36, 37, 38, },
-};
-
-constexpr int8_t RIGHT_KEY_MAP[4][6] = {
-  {   6,  7,  8,  9, 10, 11, },
-  {  18, 19, 20, 21, 22, 23, },
-  {  30, 31, 32, 33, 34, 35, },
-  {  39, 40, 41, -1, -1, -1, },
 };
 
 constexpr uint8_t RGB_MAP[54] = {

@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#include "calculate_mask.h"
 #include "encoder_pins.h"
 #include "main_flash_layout.h"
 #include "pinnacle_pins.h"
@@ -77,14 +78,14 @@ const PinnaclePins PINNACLE_PINS[2] = {
 #define JAVELIN_BUTTON_MATRIX 1
 
 constexpr uint8_t LEFT_COLUMN_PINS[] = {19, 20, 25, 4, 9, 10, 5};
-constexpr uint32_t LEFT_COLUMN_PIN_MASK = 0x02180630;
+constexpr uint32_t LEFT_COLUMN_PIN_MASK = CALCULATE_MASK(LEFT_COLUMN_PINS);
 constexpr uint8_t LEFT_ROW_PINS[] = {8, 11, 7, 6};
-constexpr uint32_t LEFT_ROW_PIN_MASK = 0x000009c0;
+constexpr uint32_t LEFT_ROW_PIN_MASK = CALCULATE_MASK(LEFT_ROW_PINS);
 
 constexpr uint8_t RIGHT_COLUMN_PINS[] = {5, 10, 9, 4, 25, 20, 19};
-constexpr uint32_t RIGHT_COLUMN_PIN_MASK = 0x02180630;
+constexpr uint32_t RIGHT_COLUMN_PIN_MASK = CALCULATE_MASK(RIGHT_COLUMN_PINS);
 constexpr uint8_t RIGHT_ROW_PINS[] = {8, 11, 7, 6};
-constexpr uint32_t RIGHT_ROW_PIN_MASK = 0x000009c0;
+constexpr uint32_t RIGHT_ROW_PIN_MASK = CALCULATE_MASK(RIGHT_ROW_PINS);
 
 // clang-format off
 //

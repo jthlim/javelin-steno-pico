@@ -6,8 +6,8 @@
 
 //---------------------------------------------------------------------------
 
-uint32_t BUTTON_PIN_MASK = 1 << JAVELIN_ENCODER_BUTTON_PIN;
 uint8_t BUTTON_PINS[] = {JAVELIN_ENCODER_BUTTON_PIN};
+uint32_t BUTTON_PIN_MASK = 1 << JAVELIN_ENCODER_BUTTON_PIN;
 
 //---------------------------------------------------------------------------
 

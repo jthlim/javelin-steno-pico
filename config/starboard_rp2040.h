@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#include "calculate_mask.h"
 #include "main_flash_layout.h"
 
 //---------------------------------------------------------------------------
@@ -24,7 +25,7 @@ constexpr uint8_t BUTTON_PINS[] = {
 
     24, // usr button on MCU
 };
-constexpr uint32_t BUTTON_PIN_MASK = 0x1d7fffff;
+constexpr uint32_t BUTTON_PIN_MASK = CALCULATE_MASK(BUTTON_PINS);
 
 #define BOOTSEL_BUTTON_INDEX 27
 
@@ -43,6 +44,6 @@ const size_t BUTTON_COUNT = 28;
 const char *const MANUFACTURER_NAME = "Andrew Hess";
 const char *const PRODUCT_NAME = "Starboard (Javelin)";
 const int VENDOR_ID = 0xFEED;
-const int PRODUCT_ID = 0xABCD;
+// const int PRODUCT_ID = 0xABCD;
 
 //---------------------------------------------------------------------------
