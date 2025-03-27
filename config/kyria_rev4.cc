@@ -7,7 +7,6 @@
 //---------------------------------------------------------------------------
 
 uint8_t BUTTON_PINS[] = {JAVELIN_ENCODER_BUTTON_PIN};
-uint32_t BUTTON_PIN_MASK = 1 << JAVELIN_ENCODER_BUTTON_PIN;
 
 //---------------------------------------------------------------------------
 
@@ -66,7 +65,6 @@ void preButtonStateInitialize() {
   if (!shouldUseEncoderModule()) {
 #if USE_HALCYON_ENCODER
     BUTTON_PINS[0] = JAVELIN_ENCODER_UNUSED_PIN;
-    BUTTON_PIN_MASK = 1 << JAVELIN_ENCODER_UNUSED_PIN;
 #endif
     PicoEncoderState::SetLocalEncoderCount(1);
   }

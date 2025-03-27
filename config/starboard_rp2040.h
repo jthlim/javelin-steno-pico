@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "calculate_mask.h"
 #include "main_flash_layout.h"
 
 //---------------------------------------------------------------------------
@@ -25,7 +24,6 @@ constexpr uint8_t BUTTON_PINS[] = {
 
     24, // usr button on MCU
 };
-constexpr uint32_t BUTTON_PIN_MASK = CALCULATE_MASK(BUTTON_PINS);
 
 #define BOOTSEL_BUTTON_INDEX 27
 

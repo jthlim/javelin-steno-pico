@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include "pico_button_state.h"
+#include "calculate_mask.h"
 #include "javelin/split/split.h"
 #include <hardware/gpio.h>
 #include <hardware/structs/ioqspi.h>
@@ -19,39 +20,41 @@
 #if JAVELIN_SPLIT_IS_LEFT
 
 #define COLUMN_PINS LEFT_COLUMN_PINS
-#define COLUMN_PIN_MASK LEFT_COLUMN_PIN_MASK
 #define ROW_PINS LEFT_ROW_PINS
-#define ROW_PIN_MASK LEFT_ROW_PIN_MASK
 #define KEY_MAP LEFT_KEY_MAP
-const size_t COLUMN_PIN_COUNT = sizeof(LEFT_COLUMN_PINS);
-const size_t ROW_PIN_COUNT = sizeof(LEFT_ROW_PINS);
+constexpr uint32_t COLUMN_PIN_MASK = CALCULATE_MASK(LEFT_COLUMN_PINS);
+constexpr uint32_t ROW_PIN_MASK = CALCULATE_MASK(LEFT_ROW_PINS);
+constexpr size_t COLUMN_PIN_COUNT = sizeof(LEFT_COLUMN_PINS);
+constexpr size_t ROW_PIN_COUNT = sizeof(LEFT_ROW_PINS);
 
 #else // JAVELIN_SPLIT_IS_LEFT
 
 #define COLUMN_PINS RIGHT_COLUMN_PINS
-#define COLUMN_PIN_MASK RIGHT_COLUMN_PIN_MASK
 #define ROW_PINS RIGHT_ROW_PINS
-#define ROW_PIN_MASK RIGHT_ROW_PIN_MASK
 #define KEY_MAP RIGHT_KEY_MAP
-const size_t COLUMN_PIN_COUNT = sizeof(RIGHT_COLUMN_PINS);
-const size_t ROW_PIN_COUNT = sizeof(RIGHT_ROW_PINS);
+constexpr uint32_t COLUMN_PIN_MASK = CALCULATE_MASK(RIGHT_COLUMN_PINS);
+constexpr uint32_t ROW_PIN_MASK = CALCULATE_MASK(RIGHT_ROW_PINS);
+constexpr size_t COLUMN_PIN_COUNT = sizeof(RIGHT_COLUMN_PINS);
+constexpr size_t ROW_PIN_COUNT = sizeof(RIGHT_ROW_PINS);
 
 #endif // JAVELIN_SPLIT_IS_LEFT
 #else  // defined(JAVELIN_SPLIT_IS_LEFT)
 
 auto COLUMN_PINS = LEFT_COLUMN_PINS;
-auto COLUMN_PIN_MASK = LEFT_COLUMN_PIN_MASK;
 auto ROW_PINS = LEFT_ROW_PINS;
-auto ROW_PIN_MASK = LEFT_ROW_PIN_MASK;
 auto KEY_MAP = LEFT_KEY_MAP;
-const size_t COLUMN_PIN_COUNT = sizeof(LEFT_COLUMN_PINS);
-const size_t ROW_PIN_COUNT = sizeof(LEFT_ROW_PINS);
+uint32_t COLUMN_PIN_MASK = CALCULATE_MASK(LEFT_COLUMN_PINS);
+uint32_t ROW_PIN_MASK = CALCULATE_MASK(LEFT_ROW_PINS);
+size_t COLUMN_PIN_COUNT = sizeof(LEFT_COLUMN_PINS);
+size_t ROW_PIN_COUNT = sizeof(LEFT_ROW_PINS);
 
 #endif // defined(JAVELIN_SPLIT_IS_LEFT)
 #else  // JAVELIN_SPLIT
 
-const size_t COLUMN_PIN_COUNT = sizeof(COLUMN_PINS);
-const size_t ROW_PIN_COUNT = sizeof(ROW_PINS);
+constexpr uint32_t COLUMN_PIN_MASK = CALCULATE_MASK(COLUMN_PINS);
+constexpr uint32_t ROW_PIN_MASK = CALCULATE_MASK(ROW_PINS);
+constexpr size_t COLUMN_PIN_COUNT = sizeof(COLUMN_PINS);
+constexpr size_t ROW_PIN_COUNT = sizeof(ROW_PINS);
 
 #endif
 
@@ -77,10 +80,12 @@ void PicoButtonState::Initialize() {
 #if !defined(JAVELIN_SPLIT_IS_LEFT)
   if (!Split::IsLeft()) {
     COLUMN_PINS = RIGHT_COLUMN_PINS;
-    COLUMN_PIN_MASK = RIGHT_COLUMN_PIN_MASK;
     ROW_PINS = RIGHT_ROW_PINS;
-    ROW_PIN_MASK = RIGHT_ROW_PIN_MASK;
     KEY_MAP = RIGHT_KEY_MAP;
+    COLUMN_PIN_MASK = CALCULATE_MASK(RIGHT_COLUMN_PINS);
+    ROW_PIN_MASK = CALCULATE_MASK(RIGHT_ROW_PINS);
+    COLUMN_PIN_COUNT = sizeof(RIGHT_COLUMN_PINS);
+    ROW_PIN_COUNT = sizeof(RIGHT_ROW_PINS);
   }
 #endif
 #endif
@@ -96,6 +101,7 @@ void PicoButtonState::Initialize() {
 #endif
 
 #if JAVELIN_BUTTON_PINS
+  uint32_t BUTTON_PIN_MASK = CALCULATE_MASK(BUTTON_PINS);
   gpio_init_mask(BUTTON_PIN_MASK);
   gpio_set_dir_masked(BUTTON_PIN_MASK, 0);
 
@@ -113,6 +119,7 @@ void PicoButtonState::Initialize() {
 #endif
 
 #if JAVELIN_BUTTON_TOUCH
+  constexpr uint32_t BUTTON_TOUCH_PIN_MASK = CALCULATE_MASK(BUTTON_TOUCH_PINS);
   gpio_init_mask(BUTTON_TOUCH_PIN_MASK);
   for (const uint8_t pin : BUTTON_TOUCH_PINS) {
     gpio_disable_pulls(pin);
@@ -186,6 +193,7 @@ static bool __no_inline_not_in_flash_func(isBootSelButtonPressed)() {
 
 #if JAVELIN_BUTTON_TOUCH
 void PicoButtonState::ReadTouchCounters(uint32_t *counters) {
+  constexpr uint32_t BUTTON_TOUCH_PIN_MASK = CALCULATE_MASK(BUTTON_TOUCH_PINS);
   gpio_set_dir_masked(BUTTON_TOUCH_PIN_MASK, BUTTON_TOUCH_PIN_MASK);
   gpio_put_masked(BUTTON_TOUCH_PIN_MASK, BUTTON_TOUCH_PIN_MASK);
 

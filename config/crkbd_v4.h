@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "calculate_mask.h"
 #include "encoder_pins.h"
 #include "main_flash_layout.h"
 
@@ -42,7 +41,6 @@ constexpr uint8_t BUTTON_PINS[] = {
    17, 16, 25, 28,  3,  9,     /**/        0x7f, 0x7f, 0x7f, 0x7f, 0x7f, 0x7f,
                  14, 15, 11,   /**/  0x7f, 0x7f, 0x7f,
 };
-constexpr uint32_t BUTTON_PIN_MASK = CALCULATE_MASK(BUTTON_PINS);
 
 // clang-format off
 //

@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "calculate_mask.h"
 #include "main_flash_layout.h"
 
 //---------------------------------------------------------------------------
@@ -19,7 +18,6 @@ constexpr uint8_t BUTTON_PINS[] = {
     9,  10, 3,  4,  6,     /**/      21, 20, 19, 15, 16,  // Middle row
                11, 12,     /**/      13, 14,              // Thumb row
 };
-constexpr uint32_t BUTTON_PIN_MASK = CALCULATE_MASK(BUTTON_PINS);
 
 #define BOOTSEL_BUTTON_INDEX 26
 

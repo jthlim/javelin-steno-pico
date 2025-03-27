@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "calculate_mask.h"
 #include "main_flash_layout.h"
 
 //---------------------------------------------------------------------------
@@ -16,9 +15,7 @@
 #define JAVELIN_BUTTON_MATRIX 1
 
 constexpr uint8_t COLUMN_PINS[] = {25, 24, 23, 22, 21, 20, 7, 4, 3, 2, 1, 0};
-constexpr uint32_t COLUMN_PIN_MASK = CALCULATE_MASK(COLUMN_PINS);
 constexpr uint8_t ROW_PINS[] = {6, 5, 19, 18};
-constexpr uint32_t ROW_PIN_MASK = CALCULATE_MASK(ROW_PINS);
 
 // clang-format off
 constexpr int8_t KEY_MAP[4][16] = {

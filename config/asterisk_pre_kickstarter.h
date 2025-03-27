@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------
 
 #pragma once
-#include "calculate_mask.h"
 #include "main_flash_layout.h"
 
 //---------------------------------------------------------------------------
@@ -21,7 +20,6 @@ constexpr uint8_t BUTTON_TOUCH_PINS[26] = {
    9,  7,  5,  4,     /**/     21, 20, 18, 16, 13,
               10, 11, /**/ 15, 14,
 };
-constexpr uint32_t BUTTON_TOUCH_PIN_MASK = CALCULATE_MASK(BUTTON_TOUCH_PINS);
 constexpr float BUTTON_TOUCH_THRESHOLD = 1.20f;
 // clang-format on
 
