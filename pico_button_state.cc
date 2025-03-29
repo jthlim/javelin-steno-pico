@@ -152,6 +152,16 @@ void PicoButtonState::Initialize() {
 #if defined(BOOTSEL_BUTTON_INDEX)
 
 static bool __no_inline_not_in_flash_func(isBootSelButtonPressed)() {
+  static bool lastBootSelButtonState;
+
+  // Do not read bootsel within an interrupt, as disabling flash can cause
+  // things to blow up if the second CPU is active.
+  int ipsr;
+  asm("mrs %0, ipsr" : "=r"(ipsr));
+  if (ipsr) {
+    return lastBootSelButtonState;
+  }
+
   const int CS_PIN_INDEX = 1;
 
   // Flash access is temporarily disabled, so interrupts must be disabled.
@@ -186,7 +196,7 @@ static bool __no_inline_not_in_flash_func(isBootSelButtonPressed)() {
                   IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_BITS);
 
   restore_interrupts(flags);
-
+  lastBootSelButtonState = buttonState;
   return buttonState;
 }
 #endif
