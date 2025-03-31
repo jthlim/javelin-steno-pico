@@ -16,6 +16,10 @@ struct PicoTimer {
   const PicoRegister timerawl;
   PicoRegister dbgPause;
   PicoRegister pause;
+#if JAVELIN_PICO_PLATFORM == 2350
+  PicoRegister locked;
+  PicoRegister source;
+#endif
   PicoRegister interrupt; // Raw Status
   PicoRegister interruptEnable;
   PicoRegister interruptForce;
@@ -35,6 +39,14 @@ struct PicoTimer {
   }
 };
 
+#if JAVELIN_PICO_PLATFORM == 2040
 static PicoTimer *const timer = (PicoTimer *)0x40054000;
+#elif JAVELIN_PICO_PLATFORM == 2350
+static PicoTimer *const timer = (PicoTimer *)0x400b0000;
+static PicoTimer *const timer0 = (PicoTimer *)0x400b0000;
+static PicoTimer *const timer1 = (PicoTimer *)0x400b8000;
+#else
+#error Unsupported platform
+#endif
 
 //---------------------------------------------------------------------------
