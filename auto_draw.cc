@@ -141,7 +141,7 @@ void StenoStrokeCapture::DrawWpm(int displayId) {
   Display::Clear(displayId);
 
   char buffer[16];
-  Str::Sprintf(buffer, "%d", WpmTracker::instance.Get5sWpm());
+  Str::Sprintf(buffer, "%d", newWpm);
 #if JAVELIN_DISPLAY_WIDTH >= 130 && JAVELIN_DISPLAY_HEIGHT >= 128
   const Font *font = &Font::HUGE_DIGITS;
 #elif JAVELIN_DISPLAY_WIDTH >= 64

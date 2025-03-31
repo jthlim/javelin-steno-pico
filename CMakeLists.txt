@@ -9,6 +9,10 @@ if ("${JAVELIN_BOARD}" STREQUAL "")
 endif()
 
 add_definitions(
+  -O2 -g
+  -ffunction-sections -fdata-sections
+  -fno-devirtualize-speculatively
+  -fno-exceptions
   -DJAVELIN_BOARD_CONFIG=\"config/${JAVELIN_BOARD}.h\"
   -DJAVELIN_PLATFORM_PICO_SDK=1
   -DJAVELIN_THREADS=1
@@ -19,6 +23,7 @@ add_definitions(
   -DPICO_MALLOC_PANIC=0
   -DPICO_NO_FPGA_CHECK=1
   -DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64
+  -DPICO_PANIC_FUNCTION=0
 )
 
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
@@ -33,6 +38,7 @@ if (PICO_PLATFORM STREQUAL "rp2040")
   set (SIZE "$ENV{PICO_TOOLCHAIN_PATH}/bin/arm-none-eabi-size")
 elseif (PICO_PLATFORM STREQUAL "rp2350-arm-s")
   add_definitions(
+    -flto=auto
     -DJAVELIN_CPU_CORTEX_M33=1
     -DJAVELIN_USE_CUSTOM_POP_COUNT=1
     -DJAVELIN_PICO_PLATFORM=2350
@@ -49,9 +55,6 @@ endif()
 project(${NAME} C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 23)
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g -fno-exceptions -fno-devirtualize-speculatively -save-temps")
 
 pico_sdk_init()
 

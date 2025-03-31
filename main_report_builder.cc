@@ -199,7 +199,8 @@ void MainReportBuilder::SendMousePageReportIfRequired() {
     return;
   }
 
-  SendReport(MOUSE_PAGE_REPORT_ID, (const uint8_t *)&mouseBuffers[0], 12);
+  reportBuffer.SendReport(MOUSE_PAGE_REPORT_ID,
+                          (const uint8_t *)&mouseBuffers[0], 12);
 }
 
 void MainReportBuilder::SendReport(uint8_t reportId, const uint8_t *data,

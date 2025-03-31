@@ -227,6 +227,7 @@ void PicoSplit::SplitData::OnReceiveFailed() {
 
     RxBuffer::OnConnectionReset();
     TxBuffer::OnConnectionReset();
+    ButtonScriptManager::ExecuteScript(ButtonScriptId::PAIR_CONNECTION_UPDATE);
   }
 
   if (IsMaster()) {
@@ -278,6 +279,8 @@ bool PicoSplit::SplitData::ProcessReceive() {
       isConnected = true;
       TxBuffer::OnConnect();
       RxBuffer::OnConnect();
+      ButtonScriptManager::ExecuteScript(
+          ButtonScriptId::PAIR_CONNECTION_UPDATE);
     }
 
     rxBuffer.Process();

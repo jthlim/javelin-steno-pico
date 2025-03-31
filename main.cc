@@ -161,8 +161,10 @@ static void cdc_task() {
 // while long-running processes occur.
 
 static void IrqHandler() {
+  PicoButtonState::SetInInterrupt(true);
   PicoButtonState::Update();
   PicoEncoderState::UpdateNoScriptCall();
+  PicoButtonState::SetInInterrupt(false);
   timer->AcknowledgeAlarmInterrupt(0);
   timer->SetAlarmAfterDelayInMicroseconds(0, 3'000);
 }
