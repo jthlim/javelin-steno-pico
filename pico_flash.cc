@@ -13,102 +13,37 @@ extern "C" char __flash_binary_end[];
 
 static bool IsWritableRange(const void *p) { return p >= __flash_binary_end; }
 
-void Flash::EraseBlock(const void *target, size_t size) {
+void Flash::EraseBlockInternal(const void *target, size_t size) {
   if (!IsWritableRange(target)) {
     return;
   }
 
-  const uint8_t *const t = (const uint8_t *)target;
+  instance.erasedBytes += size;
 
-  size_t eraseStart = 0;
-  size_t eraseEnd = 0;
-
-  for (size_t i = 0; i < size; i += 4096) {
-    if (RequiresErase(t + i, 4096)) {
-      if (eraseStart != eraseEnd) {
-        eraseEnd = i + 4096;
-      } else {
-        eraseStart = i;
-        eraseEnd = i + 4096;
-      }
-    }
-  }
-
-  const size_t eraseSize = eraseEnd - eraseStart;
-  if (eraseSize != 0) {
-    instance.erasedBytes += eraseSize;
-
-    const uint32_t interrupts = save_and_disable_interrupts();
-    flash_range_erase((intptr_t)t + eraseStart - XIP_BASE, eraseSize);
-    restore_interrupts(interrupts);
-  }
+  const uint32_t interrupts = save_and_disable_interrupts();
+  flash_range_erase((intptr_t)target - XIP_BASE, size);
+  restore_interrupts(interrupts);
 }
 
-void Flash::WriteBlock(const void *target, const void *data, size_t size) {
+void Flash::WriteBlockInternal(const void *target, const void *data,
+                               size_t size) {
   if (!IsWritableRange(target)) {
     return;
   }
 
-  const uint8_t *const t = (const uint8_t *)target;
-  const uint8_t *const d = (const uint8_t *)data;
-
-  size_t eraseStart = 0;
-  size_t eraseEnd = 0;
-
-  for (size_t i = 0; i < size; i += 4096) {
-    if (RequiresErase(t + i, d + i, 4096)) {
-      if (eraseStart != eraseEnd) {
-        eraseEnd = i + 4096;
-      } else {
-        eraseStart = i;
-        eraseEnd = i + 4096;
-      }
-    }
-  }
-
-  const size_t eraseSize = eraseEnd - eraseStart;
-  if (eraseSize != 0) {
-    instance.erasedBytes += eraseSize;
-
-    const uint32_t interrupts = save_and_disable_interrupts();
-    flash_range_erase((intptr_t)t + eraseStart - XIP_BASE, eraseSize);
-    restore_interrupts(interrupts);
-  }
-
-  size_t programStart = 0;
-  size_t programEnd = 0;
-  for (size_t i = 0; i < size; i += 256) {
-    if (RequiresProgram(t + i, d + i, 256)) {
-      if (programStart != programEnd) {
-        programEnd = i + 256;
-      } else {
-        programStart = i;
-        programEnd = i + 256;
-      }
-    }
-  }
-
-  const size_t programSize = programEnd - programStart;
-  if (programSize) {
-    instance.programmedBytes += programSize;
-
-    const uint32_t interrupts = save_and_disable_interrupts();
-    flash_range_program((intptr_t)t + programStart - XIP_BASE, d + programStart,
-                        programSize);
-    restore_interrupts(interrupts);
-  }
-
-  // Do a check, to ensure it is programmed accurately.
-  if (memcmp(target, data, size) != 0) {
-    // If it didn't, then do a full erase/program cycle.
-    instance.erasedBytes += size;
+  for (int i = 0; i < 3; ++i) {
     instance.programmedBytes += size;
-    instance.reprogrammedBytes += size;
 
     const uint32_t interrupts = save_and_disable_interrupts();
-    flash_range_erase((intptr_t)t - XIP_BASE, size);
-    flash_range_program((intptr_t)t - XIP_BASE, d, size);
+    flash_range_program((intptr_t)target - XIP_BASE, (const uint8_t *)data,
+                        size);
     restore_interrupts(interrupts);
+
+    if (memcmp(target, data, size) == 0) {
+      return;
+    }
+
+    instance.reprogrammedBytes += size;
   }
 }
 
