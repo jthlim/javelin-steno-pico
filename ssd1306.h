@@ -118,7 +118,8 @@ private:
     void Clear();
     void DrawLine(int x0, int y0, int x1, int y1);
     void DrawRect(int left, int top, int right, int bottom);
-    void DrawImage(int x, int y, int width, int height, const uint8_t *data);
+    void DrawBitmapImage(int x, int y, int width, int height,
+                         const uint8_t *data);
     void DrawGrayscaleRange(int x, int y, int width, int height,
                             const uint8_t *data, int min, int max);
     void DrawText(int x, int y, const Font *font, TextAlignment alignment,

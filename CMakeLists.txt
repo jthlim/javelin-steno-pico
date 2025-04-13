@@ -102,6 +102,7 @@ target_sources(${NAME} PUBLIC
   st7789_steno_layout.cc
   usb_descriptors.cc
 
+  javelin/asset_manager.cc
   javelin/base64.cc
   javelin/bit.cc
   javelin/button_script.cc

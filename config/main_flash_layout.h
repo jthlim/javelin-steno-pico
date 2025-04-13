@@ -30,6 +30,7 @@ static const struct ScriptStorageData *const SCRIPT_STORAGE_ADDRESS =
 static const size_t MAXIMUM_SCRIPT_STORAGE_SIZE = 0x20000;
 const StenoDictionaryCollection *const STENO_MAP_DICTIONARY_COLLECTION_ADDRESS =
     (const StenoDictionaryCollection *)0x10400000;
+const intptr_t ASSET_STORAGE_END_ADDRESS = 0x10fc0000;
 const uint8_t *const STENO_USER_DICTIONARY_ADDRESS =
     (const uint8_t *)0x10fc0000;
 const size_t STENO_USER_DICTIONARY_SIZE = 0x40000;

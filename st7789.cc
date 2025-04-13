@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #include "st7789.h"
+#include "config/kyria_rev4.h"
 #include "javelin/button_script_manager.h"
 #include "javelin/console.h"
 #include "javelin/font/monochrome/font.h"
@@ -197,7 +198,7 @@ void St7789::St7789Data::SetPixel(uint32_t x, uint32_t y) {
   }
 
   const size_t pixelIndex = y * JAVELIN_DISPLAY_WIDTH + x;
-  buffer16[pixelIndex] = drawColor;
+  buffer16[pixelIndex] = drawColor565;
 }
 
 void St7789::St7789Data::Clear() {
@@ -208,20 +209,20 @@ void St7789::St7789Data::Clear() {
   }
   dirty = true;
 
-  dma6->source = &zero;
-  dma6->destination = buffer32;
-  dma6->count = sizeof(buffer32) / 4;
+  dma5->source = &zero;
+  dma5->destination = buffer32;
+  dma5->count = sizeof(buffer32) / 4;
   constexpr PicoDmaControl dmaControl = {
       .enable = true,
       .dataSize = PicoDmaControl::DataSize::WORD,
       .incrementRead = false,
       .incrementWrite = true,
-      .chainToDma = 6,
+      .chainToDma = 5,
       .transferRequest = PicoDmaTransferRequest::PERMANENT,
       .sniffEnable = false,
   };
-  dma6->controlTrigger = dmaControl;
-  dma6->WaitUntilComplete();
+  dma5->controlTrigger = dmaControl;
+  dma5->WaitUntilComplete();
 }
 
 void St7789::St7789Data::DrawLine(int x0, int y0, int x1, int y1) {
@@ -285,14 +286,14 @@ void St7789::St7789Data::DrawRect(int left, int top, int right, int bottom) {
   uint16_t *p = &buffer16[top * JAVELIN_DISPLAY_WIDTH + left];
   for (int y = top; y < bottom; y++) {
     for (int x = 0; x < width; ++x) {
-      p[x] = drawColor;
+      p[x] = drawColor565;
     }
     p += JAVELIN_DISPLAY_WIDTH;
   }
 }
 
-void St7789::St7789Data::DrawImage(int x, int y, int width, int height,
-                                   const uint8_t *data) {
+void St7789::St7789Data::DrawBitmapImage(int x, int y, int width, int height,
+                                         const uint8_t *data) {
   if (!available) {
     return;
   }
@@ -334,7 +335,7 @@ void St7789::St7789Data::DrawImage(int x, int y, int width, int height,
         if (v & (1 << i)) {
           const uint32_t pixelY = topY + i;
           if (pixelY < JAVELIN_DISPLAY_HEIGHT) {
-            p[pixelY * JAVELIN_DISPLAY_WIDTH] = drawColor;
+            p[pixelY * JAVELIN_DISPLAY_WIDTH] = drawColor565;
           }
         }
       }
@@ -342,6 +343,223 @@ void St7789::St7789Data::DrawImage(int x, int y, int width, int height,
 
     p++;
     --width;
+  }
+}
+
+void St7789::St7789Data::DrawGrayscaleImage(int x, int y, int width, int height,
+                                            const uint8_t *data) {
+  if (!available) {
+    return;
+  }
+
+  // It's all off the screen.
+  if (x >= JAVELIN_DISPLAY_WIDTH || y >= JAVELIN_DISPLAY_HEIGHT) {
+    return;
+  }
+
+  const int imageWidth = width;
+  if (y < 0) {
+    height += y;
+    if (height <= 0) {
+      return;
+    }
+    data -= y * width;
+    y = 0;
+  }
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
+
+  if (x < 0) {
+    width += x;
+    if (width <= 0) {
+      return;
+    }
+    data -= x;
+    x = 0;
+  }
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
+    width = JAVELIN_DISPLAY_WIDTH - x;
+  }
+  const int dataAdvance = imageWidth - width;
+
+  dirty = true;
+
+  uint16_t *p = &buffer16[y * JAVELIN_DISPLAY_WIDTH + x];
+  const int bufferAdvance = JAVELIN_DISPLAY_WIDTH - width;
+
+  for (; height > 0; --height, data += dataAdvance, p += bufferAdvance) {
+    for (int xx = 0; xx < width; ++xx) {
+      *p++ = drawColor.Scale(*data++).To565();
+    }
+  }
+}
+
+void St7789::St7789Data::DrawRgb332Image(int x, int y, int width, int height,
+                                         const uint8_t *data) {
+  if (!available) {
+    return;
+  }
+
+  // It's all off the screen.
+  if (x >= JAVELIN_DISPLAY_WIDTH || y >= JAVELIN_DISPLAY_HEIGHT) {
+    return;
+  }
+
+  const int imageWidth = width;
+  if (y < 0) {
+    height += y;
+    if (height <= 0) {
+      return;
+    }
+    data -= y * width;
+    y = 0;
+  }
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
+
+  if (x < 0) {
+    width += x;
+    if (width <= 0) {
+      return;
+    }
+    data -= x;
+    x = 0;
+  }
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
+    width = JAVELIN_DISPLAY_WIDTH - x;
+  }
+  const int dataAdvance = imageWidth - width;
+
+  dirty = true;
+
+  uint16_t *p = &buffer16[y * JAVELIN_DISPLAY_WIDTH + x];
+  const int bufferAdvance = JAVELIN_DISPLAY_WIDTH - width;
+
+  for (; height > 0; --height, data += dataAdvance, p += bufferAdvance) {
+    for (int xx = 0; xx < width; ++xx) {
+      const uint32_t v = *data++;
+      int r = (v >> 5) & 7;
+      int g = (v >> 2) & 7;
+      int b = v & 3;
+      *p++ = (r << 13) | (g << 8) | (b << 3);
+    }
+  }
+}
+
+void St7789::St7789Data::DrawRgb565Image(int x, int y, int width, int height,
+                                         const uint8_t *data) {
+  if (!available) {
+    return;
+  }
+
+  // It's all off the screen.
+  if (x >= JAVELIN_DISPLAY_WIDTH || y >= JAVELIN_DISPLAY_HEIGHT) {
+    return;
+  }
+
+  const int imageWidth = width;
+  const uint16_t *rgbData = (const uint16_t *)data;
+  if (y < 0) {
+    height += y;
+    if (height <= 0) {
+      return;
+    }
+    rgbData -= y * width;
+    y = 0;
+  }
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
+
+  if (x < 0) {
+    width += x;
+    if (width <= 0) {
+      return;
+    }
+    rgbData -= x;
+    x = 0;
+  }
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
+    width = JAVELIN_DISPLAY_WIDTH - x;
+  }
+
+  dirty = true;
+
+  uint16_t *p = &buffer16[y * JAVELIN_DISPLAY_WIDTH + x];
+
+  dma5->count = width;
+  constexpr PicoDmaControl dmaControl = {
+      .enable = true,
+      .dataSize = PicoDmaControl::DataSize::HALF_WORD,
+      .incrementRead = true,
+      .incrementWrite = true,
+      .chainToDma = 5,
+      .transferRequest = PicoDmaTransferRequest::PERMANENT,
+      .sniffEnable = false,
+  };
+  dma5->control = dmaControl;
+
+  while (height > 0) {
+    dma5->source = rgbData;
+    dma5->destinationTrigger = p;
+    rgbData += imageWidth;
+    p += JAVELIN_DISPLAY_WIDTH;
+    dma5->WaitUntilComplete();
+    --height;
+  }
+}
+
+void St7789::St7789Data::DrawRgb888Image(int x, int y, int width, int height,
+                                         const uint8_t *data) {
+  if (!available) {
+    return;
+  }
+
+  // It's all off the screen.
+  if (x >= JAVELIN_DISPLAY_WIDTH || y >= JAVELIN_DISPLAY_HEIGHT) {
+    return;
+  }
+
+  const int imageWidth = width;
+  const Color *rgbData = (const Color *)data;
+  if (y < 0) {
+    height += y;
+    if (height <= 0) {
+      return;
+    }
+    rgbData -= y * width;
+    y = 0;
+  }
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
+
+  if (x < 0) {
+    width += x;
+    if (width <= 0) {
+      return;
+    }
+    rgbData -= x;
+    x = 0;
+  }
+
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
+    width = JAVELIN_DISPLAY_WIDTH - x;
+  }
+  const int dataAdvance = imageWidth - width;
+
+  dirty = true;
+
+  uint16_t *p = &buffer16[y * JAVELIN_DISPLAY_WIDTH + x];
+  const int bufferAdvance = JAVELIN_DISPLAY_WIDTH - width;
+
+  for (; height > 0; --height, rgbData += dataAdvance, p += bufferAdvance) {
+    for (int xx = 0; xx < width; ++xx) {
+      *p++ = rgbData->To565();
+      ++rgbData;
+    }
   }
 }
 
@@ -397,7 +615,7 @@ void St7789::St7789Data::DrawGrayscaleRange(int x, int y, int width, int height,
 
     for (int yy = 0; yy < height; ++yy) {
       if (min <= column[yy] && column[yy] < max) {
-        pColumn[yy * JAVELIN_DISPLAY_WIDTH] = drawColor;
+        pColumn[yy * JAVELIN_DISPLAY_WIDTH] = drawColor565;
       }
     }
 
@@ -435,7 +653,7 @@ void St7789::St7789Data::DrawText(int x, int y, const Font *font,
     const uint8_t *data = font->GetCharacterData(c);
     if (data) {
       const uint32_t width = font->GetCharacterWidth(c);
-      DrawImage(x, y, width, font->height, data);
+      DrawBitmapImage(x, y, width, font->height, data);
       x += width;
     }
     x += font->spacing;
@@ -727,10 +945,10 @@ void St7789::St7789Data::UpdateBuffer(TxBuffer &buffer) {
   } else {
     txData->size = sizeof(St7789TxRxData::data);
   }
-  dma6->Copy32(txData->data, buffer8 + txData->offset, txData->size / 4);
+  dma5->Copy32(txData->data, buffer8 + txData->offset, txData->size / 4);
 
   buffer.Add(SplitHandlerId::DISPLAY_DATA, 8 + txData->size);
-  dma6->WaitUntilComplete();
+  dma5->WaitUntilComplete();
 }
 
 void St7789::St7789Data::OnDataReceived(const void *data, size_t length) {
@@ -742,13 +960,13 @@ void St7789::St7789Data::OnDataReceived(const void *data, size_t length) {
     return;
   }
 
-  dma6->Copy32(buffer8 + rxData->offset, rxData->data, rxData->size / 4);
+  dma5->Copy32(buffer8 + rxData->offset, rxData->data, rxData->size / 4);
 
   if (rxData->offset + rxData->size >= sizeof(buffer32)) {
     dirty = true;
   }
 
-  dma6->WaitUntilComplete();
+  dma5->WaitUntilComplete();
 }
 
 //---------------------------------------------------------------------------
@@ -813,7 +1031,7 @@ void Display::DrawLine(int displayId, int x1, int y1, int x2, int y2) {
 }
 
 void Display::DrawImage(int displayId, int x, int y, int width, int height,
-                        const uint8_t *data) {
+                        ImageFormat format, const uint8_t *data) {
 #if JAVELIN_SPLIT
   if (displayId < 0 || displayId >= 2) {
     return;
@@ -822,7 +1040,24 @@ void Display::DrawImage(int displayId, int x, int y, int width, int height,
   displayId = 0;
 #endif
 
-  St7789::instances[displayId].DrawImage(x, y, width, height, data);
+  switch (format) {
+  case ImageFormat::BITMAP:
+    St7789::instances[displayId].DrawBitmapImage(x, y, width, height, data);
+    break;
+  case ImageFormat::GRAYSCALE:
+    St7789::instances[displayId].DrawGrayscaleImage(x, y, width, height, data);
+    break;
+  case ImageFormat::RGB332:
+    St7789::instances[displayId].DrawRgb332Image(x, y, width, height, data);
+    break;
+  case ImageFormat::RGB565:
+    St7789::instances[displayId].DrawRgb565Image(x, y, width, height, data);
+    break;
+  case ImageFormat::RGB888:
+    St7789::instances[displayId].DrawRgb888Image(x, y, width, height, data);
+    break;
+    break;
+  }
 }
 
 void Display::DrawGrayscaleRange(int displayId, int x, int y, int width,
@@ -874,12 +1109,13 @@ void Display::SetDrawColor(int displayId, int color) {
 #else
   displayId = 0;
 #endif
-  const int r = (color >> 19) & 0x1f;
-  const int g = (color >> 10) & 0x3f;
-  const int b = (color >> 3) & 0x1f;
-
-  const int rgb565 = (r << 11) | (g << 5) | b;
-  St7789::instances[displayId].drawColor = rgb565;
+  const Color rgb = {
+      .r = (uint8_t)(color >> 16),
+      .g = (uint8_t)(color >> 8),
+      .b = (uint8_t)color,
+  };
+  St7789::instances[displayId].drawColor = rgb;
+  St7789::instances[displayId].drawColor565 = rgb.To565();
 }
 
 void Display::SetDrawColorRgb(int displayId, int r, int g, int b) {
@@ -890,12 +1126,9 @@ void Display::SetDrawColorRgb(int displayId, int r, int g, int b) {
 #else
   displayId = 0;
 #endif
-  r = (r >> 3) & 0x1f;
-  g = (g >> 2) & 0x3f;
-  b = (b >> 3) & 0x1f;
-
-  const int rgb565 = (r << 11) | (g << 5) | b;
-  St7789::instances[displayId].drawColor = rgb565;
+  const Color rgb = {.r = (uint8_t)r, .g = (uint8_t)g, .b = (uint8_t)b};
+  St7789::instances[displayId].drawColor = rgb;
+  St7789::instances[displayId].drawColor565 = rgb.To565();
 }
 
 void Display::DrawEffect(int displayId, int effectId, int parameter) {

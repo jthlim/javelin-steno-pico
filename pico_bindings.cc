@@ -2,6 +2,7 @@
 
 #include "auto_draw.h"
 #include "console_report_buffer.h"
+#include "javelin/asset_manager.h"
 #include "javelin/button_script_manager.h"
 #include "javelin/clock.h"
 #include "javelin/config_block.h"
@@ -380,6 +381,7 @@ static void GetStenoTrigger() {
 }
 
 static constexpr DynamicParameterData DYNAMIC_PARAMETER_DATA[] = {
+    {"available_asset_storage", &AssetManager::PrintFreeSize},
 #if JAVELIN_USE_EMBEDDED_STENO
     {"available_host_layouts", &HostLayouts::ListHostLayouts},
     {"host_layout", &HostLayouts::GetHostLayout},
@@ -491,6 +493,25 @@ void InitCommonCommands() {
   Rgb::AddConsoleCommands(console);
   Bootloader::AddConsoleCommands(console);
   ButtonScriptManager::GetInstance().AddConsoleCommands(console);
+
+#if JAVELIN_USE_EMBEDDED_STENO
+  const intptr_t endOfDictionaryData =
+      intptr_t(STENO_MAP_DICTIONARY_COLLECTION_ADDRESS->GetEndOfData());
+  const intptr_t endOfDictionaryDataAligned =
+      (endOfDictionaryData + Flash::BLOCK_SIZE - 1) & -Flash::BLOCK_SIZE;
+
+  if (endOfDictionaryDataAligned < ASSET_STORAGE_END_ADDRESS) {
+    AssetManager::Initialize(
+        endOfDictionaryDataAligned,
+        ASSET_STORAGE_END_ADDRESS - endOfDictionaryDataAligned,
+        STENO_MAP_DICTIONARY_COLLECTION_ADDRESS->timestamp);
+  }
+#else
+  AssetManager::Initialize(
+      ASSET_STORAGE_START_ADDRESS,
+      ASSET_STORAGE_END_ADDRESS - ASSET_STORAGE_START_ADDRESS, 0);
+#endif
+  AssetManager::AddConsoleCommands(console);
 
 #if JAVELIN_USE_WATCHDOG
   console.RegisterCommand("watchdog", "Show watchdog scratch registers",

@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------
 
 #pragma once
+#include "javelin/color.h"
 #include "javelin/font/text_alignment.h"
 #include "javelin/split/split.h"
 #include "javelin/stroke.h"
@@ -115,7 +116,8 @@ private:
     St7789Availability available;
     St7789Control control;
     bool dirty;
-    uint16_t drawColor = 0xffff;
+    uint16_t drawColor565 = 0xffff;
+    Color drawColor = Color{0xff, 0xff, 0xff};
     size_t txRxOffset;
 
     void Initialize();
@@ -124,7 +126,16 @@ private:
     void Clear();
     void DrawLine(int x0, int y0, int x1, int y1);
     void DrawRect(int left, int top, int right, int bottom);
-    void DrawImage(int x, int y, int width, int height, const uint8_t *data);
+    void DrawBitmapImage(int x, int y, int width, int height,
+                         const uint8_t *data);
+    void DrawGrayscaleImage(int x, int y, int width, int height,
+                            const uint8_t *data);
+    void DrawRgb332Image(int x, int y, int width, int height,
+                         const uint8_t *data);
+    void DrawRgb565Image(int x, int y, int width, int height,
+                         const uint8_t *data);
+    void DrawRgb888Image(int x, int y, int width, int height,
+                         const uint8_t *data);
     void DrawGrayscaleRange(int x, int y, int width, int height,
                             const uint8_t *data, int min, int max);
     void DrawText(int x, int y, const Font *font, TextAlignment alignment,

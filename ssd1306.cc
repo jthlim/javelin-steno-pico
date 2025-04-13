@@ -253,8 +253,8 @@ void Ssd1306::Ssd1306Data::DrawRect(int left, int top, int right, int bottom) {
   }
 }
 
-void Ssd1306::Ssd1306Data::DrawImage(int x, int y, int width, int height,
-                                     const uint8_t *data) {
+void Ssd1306::Ssd1306Data::DrawBitmapImage(int x, int y, int width, int height,
+                                           const uint8_t *data) {
   if (!available) {
     return;
   }
@@ -427,7 +427,7 @@ void Ssd1306::Ssd1306Data::DrawText(int x, int y, const Font *font,
     const uint8_t *data = font->GetCharacterData(c);
     if (data) {
       uint32_t width = font->GetCharacterWidth(c);
-      DrawImage(x, y, width, font->height, data);
+      DrawBitmapImage(x, y, width, font->height, data);
       x += width;
     }
     x += font->spacing;
@@ -492,59 +492,59 @@ void Ssd1306::Ssd1306Data::Update() {
 
 bool Ssd1306::Ssd1306Data::InitializeSsd1306() {
   static constexpr uint8_t COMMANDS[] = {
-    Ssd1306Command::EnableDisplay(false),
+      Ssd1306Command::EnableDisplay(false),
 
-    Ssd1306Command::SET_MEMORY_ADDRESSING_MODE,
-    Ssd1306MemoryAddressingMode::VERTICAL,
+      Ssd1306Command::SET_MEMORY_ADDRESSING_MODE,
+      Ssd1306MemoryAddressingMode::VERTICAL,
 
-    Ssd1306Command::SetDisplayStartLine(0),
+      Ssd1306Command::SetDisplayStartLine(0),
 #if !defined(JAVELIN_OLED_ROTATION) || JAVELIN_OLED_ROTATION == 0 ||           \
     JAVELIN_OLED_ROTATION == 90
-    Ssd1306Command::SET_SEGMENT_REMAP_ENABLED,
-    Ssd1306Command::SET_COM_SCAN_DIRECTION_BOTTOM_UP,
+      Ssd1306Command::SET_SEGMENT_REMAP_ENABLED,
+      Ssd1306Command::SET_COM_SCAN_DIRECTION_BOTTOM_UP,
 #elif JAVELIN_OLED_ROTATION == 180 || JAVELIN_OLED_ROTATION == 270
-    Ssd1306Command::SET_SEGMENT_REMAP_DISABLED,
-    Ssd1306Command::SET_COM_SCAN_DIRECTION_TOP_DOWN,
+      Ssd1306Command::SET_SEGMENT_REMAP_DISABLED,
+      Ssd1306Command::SET_COM_SCAN_DIRECTION_TOP_DOWN,
 #else
 #error Unsupported OLED rotation
 #endif
-    Ssd1306Command::SET_MULTIPLEX_RATIO,
-    JAVELIN_OLED_HEIGHT - 1, // Display height - 1
-    Ssd1306Command::SET_DISPLAY_OFFSET,
-    0x00,
+      Ssd1306Command::SET_MULTIPLEX_RATIO,
+      JAVELIN_OLED_HEIGHT - 1, // Display height - 1
+      Ssd1306Command::SET_DISPLAY_OFFSET,
+      0x00,
 
-    Ssd1306Command::SET_COM_PIN_CONFIGURATION,
+      Ssd1306Command::SET_COM_PIN_CONFIGURATION,
 #if (JAVELIN_OLED_WIDTH == 128 && JAVELIN_OLED_HEIGHT == 32)
-    0x02,
+      0x02,
 #elif (JAVELIN_OLED_WIDTH == 128 && JAVELIN_OLED_HEIGHT == 64)
-    0x12,
+      0x12,
 #else
-    0x02,
+      0x02,
 #endif
 
-    Ssd1306Command::SET_DISPLAY_OSCILLATOR_FREQUENCY_CLOCK_DIVIDE_RATIO,
-    0x80, // Standard frequency, ClockDiv = 1.
-    Ssd1306Command::SET_PRECHARGE_PERIOD,
-    0xF1,
-    Ssd1306Command::SET_VCOMH_DESELECT_LEVEL,
-    0x30, // 0.83xVcc
+      Ssd1306Command::SET_DISPLAY_OSCILLATOR_FREQUENCY_CLOCK_DIVIDE_RATIO,
+      0x80, // Standard frequency, ClockDiv = 1.
+      Ssd1306Command::SET_PRECHARGE_PERIOD,
+      0xF1,
+      Ssd1306Command::SET_VCOMH_DESELECT_LEVEL,
+      0x30, // 0.83xVcc
 
-    Ssd1306Command::SET_CONTRAST,
-    0xFF,
+      Ssd1306Command::SET_CONTRAST,
+      0xFF,
 
-    Ssd1306Command::SET_FORCE_WHITE_DISABLED,
-    Ssd1306Command::SET_INVERT_DISABLED,
-    Ssd1306Command::SET_CHARGE_PUMP,
-    0x14, // Enable charge pump during display on.
+      Ssd1306Command::SET_FORCE_WHITE_DISABLED,
+      Ssd1306Command::SET_INVERT_DISABLED,
+      Ssd1306Command::SET_CHARGE_PUMP,
+      0x14, // Enable charge pump during display on.
 
-    Ssd1306Command::EnableDisplay(true),
+      Ssd1306Command::EnableDisplay(true),
 
-    Ssd1306Command::SET_COLUMN_ADDRESS,
-    0,
-    JAVELIN_OLED_WIDTH - 1,
-    Ssd1306Command::SET_PAGE_ADDRESS,
-    0,
-    (JAVELIN_OLED_HEIGHT - 1) / 8,
+      Ssd1306Command::SET_COLUMN_ADDRESS,
+      0,
+      JAVELIN_OLED_WIDTH - 1,
+      Ssd1306Command::SET_PAGE_ADDRESS,
+      0,
+      (JAVELIN_OLED_HEIGHT - 1) / 8,
   };
 
   return SendCommandList(COMMANDS, sizeof(COMMANDS));
@@ -719,7 +719,7 @@ void Display::DrawLine(int displayId, int x1, int y1, int x2, int y2) {
 }
 
 void Display::DrawImage(int displayId, int x, int y, int width, int height,
-                        const uint8_t *data) {
+                        ImageFormat format, const uint8_t *data) {
 #if JAVELIN_SPLIT
   if (displayId < 0 || displayId >= 2) {
     return;
@@ -728,7 +728,16 @@ void Display::DrawImage(int displayId, int x, int y, int width, int height,
   displayId = 0;
 #endif
 
-  Ssd1306::instances[displayId].DrawImage(x, y, width, height, data);
+  switch (format) {
+  case ImageFormat::BITMAP:
+    Ssd1306::instances[displayId].DrawBitmapImage(x, y, width, height, data);
+    break;
+  case ImageFormat::GRAYSCALE:
+  case ImageFormat::RGB332:
+  case ImageFormat::RGB565:
+  case ImageFormat::RGB888:
+    break;
+  }
 }
 
 void Display::DrawGrayscaleRange(int displayId, int x, int y, int width,

@@ -279,8 +279,8 @@ struct PicoDma {
     WaitUntilComplete();
   }
 
-  inline void Copy16(void *dest, const void *source, size_t count);
-  inline void Copy32(void *dest, const void *source, size_t count);
+  inline void Copy16(void *dest, const void *source, size_t transferCount);
+  inline void Copy32(void *dest, const void *source, size_t transferCount);
 };
 
 static PicoDma *const dma0 = (PicoDma *)0x50000000;
@@ -314,10 +314,10 @@ static volatile uint32_t *const dmaTimer3 = (uint32_t *)0x5000042c;
 
 //---------------------------------------------------------------------------
 
-inline void PicoDma::Copy16(void *d, const void *s, size_t c) {
+inline void PicoDma::Copy16(void *d, const void *s, size_t transferCount) {
   source = s;
   destination = d;
-  count = c;
+  count = transferCount;
   const PicoDmaControl dmaControl = {
       .enable = true,
       .dataSize = PicoDmaControl::DataSize::HALF_WORD,
@@ -327,13 +327,13 @@ inline void PicoDma::Copy16(void *d, const void *s, size_t c) {
       .transferRequest = PicoDmaTransferRequest::PERMANENT,
       .sniffEnable = false,
   };
-  dma6->controlTrigger = dmaControl;
+  controlTrigger = dmaControl;
 }
 
-inline void PicoDma::Copy32(void *d, const void *s, size_t c) {
+inline void PicoDma::Copy32(void *d, const void *s, size_t transferCount) {
   source = s;
   destination = d;
-  count = c;
+  count = transferCount;
   const PicoDmaControl dmaControl = {
       .enable = true,
       .dataSize = PicoDmaControl::DataSize::WORD,
@@ -343,7 +343,7 @@ inline void PicoDma::Copy32(void *d, const void *s, size_t c) {
       .transferRequest = PicoDmaTransferRequest::PERMANENT,
       .sniffEnable = false,
   };
-  dma6->controlTrigger = dmaControl;
+  controlTrigger = dmaControl;
 }
 
 //---------------------------------------------------------------------------
