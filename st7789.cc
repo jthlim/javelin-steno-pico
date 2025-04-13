@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------
 
 #include "st7789.h"
-#include "config/kyria_rev4.h"
 #include "javelin/button_script_manager.h"
 #include "javelin/console.h"
 #include "javelin/font/monochrome/font.h"
