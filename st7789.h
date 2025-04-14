@@ -128,13 +128,15 @@ private:
     void DrawRect(int left, int top, int right, int bottom);
     void DrawBitmapImage(int x, int y, int width, int height,
                          const uint8_t *data);
-    void DrawGrayscaleImage(int x, int y, int width, int height,
+    void DrawLuminanceImage(int x, int y, int width, int height,
                             const uint8_t *data);
     void DrawRgb332Image(int x, int y, int width, int height,
                          const uint8_t *data);
     void DrawRgb565Image(int x, int y, int width, int height,
                          const uint8_t *data);
     void DrawRgb888Image(int x, int y, int width, int height,
+                         const uint8_t *data);
+    void DrawAlpha8Image(int x, int y, int width, int height,
                          const uint8_t *data);
     void DrawGrayscaleRange(int x, int y, int width, int height,
                             const uint8_t *data, int min, int max);

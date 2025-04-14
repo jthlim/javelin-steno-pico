@@ -732,10 +732,11 @@ void Display::DrawImage(int displayId, int x, int y, int width, int height,
   case ImageFormat::BITMAP:
     Ssd1306::instances[displayId].DrawBitmapImage(x, y, width, height, data);
     break;
-  case ImageFormat::GRAYSCALE:
+  case ImageFormat::LUMINANCE8:
   case ImageFormat::RGB332:
   case ImageFormat::RGB565:
   case ImageFormat::RGB888:
+  case ImageFormat::ALPHA8:
     break;
   }
 }

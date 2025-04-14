@@ -345,7 +345,7 @@ void St7789::St7789Data::DrawBitmapImage(int x, int y, int width, int height,
   }
 }
 
-void St7789::St7789Data::DrawGrayscaleImage(int x, int y, int width, int height,
+void St7789::St7789Data::DrawLuminanceImage(int x, int y, int width, int height,
                                             const uint8_t *data) {
   if (!available) {
     return;
@@ -558,6 +558,64 @@ void St7789::St7789Data::DrawRgb888Image(int x, int y, int width, int height,
     for (int xx = 0; xx < width; ++xx) {
       *p++ = rgbData->To565();
       ++rgbData;
+    }
+  }
+}
+
+void St7789::St7789Data::DrawAlpha8Image(int x, int y, int width, int height,
+                                         const uint8_t *data) {
+  if (!available) {
+    return;
+  }
+
+  // It's all off the screen.
+  if (x >= JAVELIN_DISPLAY_WIDTH || y >= JAVELIN_DISPLAY_HEIGHT) {
+    return;
+  }
+
+  const int imageWidth = width;
+  if (y < 0) {
+    height += y;
+    if (height <= 0) {
+      return;
+    }
+    data -= y * width;
+    y = 0;
+  }
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
+
+  if (x < 0) {
+    width += x;
+    if (width <= 0) {
+      return;
+    }
+    data -= x;
+    x = 0;
+  }
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
+    width = JAVELIN_DISPLAY_WIDTH - x;
+  }
+  const int dataAdvance = imageWidth - width;
+
+  dirty = true;
+
+  uint16_t *p = &buffer16[y * JAVELIN_DISPLAY_WIDTH + x];
+  const int bufferAdvance = JAVELIN_DISPLAY_WIDTH - width;
+
+  for (; height > 0; --height, data += dataAdvance, p += bufferAdvance) {
+    for (int xx = 0; xx < width; ++xx) {
+      const uint32_t a = *data++;
+      if (a != 0) {
+        if (a == 255) {
+          *p = drawColor565;
+        } else {
+          Color c = Color::From565(*p);
+          *p = c.Blend(drawColor, a).To565();
+        }
+      }
+      ++p;
     }
   }
 }
@@ -1043,8 +1101,8 @@ void Display::DrawImage(int displayId, int x, int y, int width, int height,
   case ImageFormat::BITMAP:
     St7789::instances[displayId].DrawBitmapImage(x, y, width, height, data);
     break;
-  case ImageFormat::GRAYSCALE:
-    St7789::instances[displayId].DrawGrayscaleImage(x, y, width, height, data);
+  case ImageFormat::LUMINANCE8:
+    St7789::instances[displayId].DrawLuminanceImage(x, y, width, height, data);
     break;
   case ImageFormat::RGB332:
     St7789::instances[displayId].DrawRgb332Image(x, y, width, height, data);
@@ -1055,6 +1113,8 @@ void Display::DrawImage(int displayId, int x, int y, int width, int height,
   case ImageFormat::RGB888:
     St7789::instances[displayId].DrawRgb888Image(x, y, width, height, data);
     break;
+  case ImageFormat::ALPHA8:
+    St7789::instances[displayId].DrawAlpha8Image(x, y, width, height, data);
     break;
   }
 }

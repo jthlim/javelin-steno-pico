@@ -449,6 +449,7 @@ void ListParametersBinding(void *context, const char *commandLine) {
 
 #if ENABLE_DEBUG_COMMAND
 
+uint32_t debugValue;
 void Debug_Binding(void *context, const char *commandLine) {
   const char *param = strchr(commandLine, ' ');
   int command = 0;
@@ -459,6 +460,7 @@ void Debug_Binding(void *context, const char *commandLine) {
   Console::Printf("Debug command: %d\n\n", command);
   switch (command) {
   case 0:
+    Console::Printf("Debug value: %u\n\n", debugValue);
     break;
   }
 }
