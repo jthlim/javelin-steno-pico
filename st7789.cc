@@ -439,9 +439,9 @@ void St7789::St7789Data::DrawRgb332Image(int x, int y, int width, int height,
   for (; height > 0; --height, data += dataAdvance, p += bufferAdvance) {
     for (int xx = 0; xx < width; ++xx) {
       const uint32_t v = *data++;
-      int r = (v >> 5) & 7;
-      int g = (v >> 2) & 7;
-      int b = v & 3;
+      const uint32_t r = (v >> 5) & 7;
+      const uint32_t g = (v >> 2) & 7;
+      const uint32_t b = v & 3;
       *p++ = (r << 13) | (g << 8) | (b << 3);
     }
   }
@@ -611,7 +611,7 @@ void St7789::St7789Data::DrawAlpha8Image(int x, int y, int width, int height,
         if (a == 255) {
           *p = drawColor565;
         } else {
-          Color c = Color::From565(*p);
+          const Color c = Color::From565(*p);
           *p = c.Blend(drawColor, a).To565();
         }
       }
@@ -620,7 +620,115 @@ void St7789::St7789Data::DrawAlpha8Image(int x, int y, int width, int height,
   }
 }
 
-void St7789::St7789Data::DrawGrayscaleRange(int x, int y, int width, int height,
+void St7789::St7789Data::DrawArgb1555Image(int x, int y, int width, int height,
+                                           const uint8_t *data) {
+  if (!available) {
+    return;
+  }
+
+  // It's all off the screen.
+  if (x >= JAVELIN_DISPLAY_WIDTH || y >= JAVELIN_DISPLAY_HEIGHT) {
+    return;
+  }
+
+  const int imageWidth = width;
+  const uint16_t *rgbData = (const uint16_t *)data;
+  if (y < 0) {
+    height += y;
+    if (height <= 0) {
+      return;
+    }
+    rgbData -= y * width;
+    y = 0;
+  }
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
+
+  if (x < 0) {
+    width += x;
+    if (width <= 0) {
+      return;
+    }
+    rgbData -= x;
+    x = 0;
+  }
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
+    width = JAVELIN_DISPLAY_WIDTH - x;
+  }
+  const int dataAdvance = imageWidth - width;
+
+  dirty = true;
+
+  uint16_t *p = &buffer16[y * JAVELIN_DISPLAY_WIDTH + x];
+  const int bufferAdvance = JAVELIN_DISPLAY_WIDTH - width;
+
+  for (; height > 0; --height, rgbData += dataAdvance, p += bufferAdvance) {
+    for (int xx = 0; xx < width; ++xx) {
+      const uint16_t v = *rgbData++;
+      if (v & 0x8000) {
+        // Convert argb1555 to rgb565
+        *p = ((v << 1) & 0xffc0) | (v & 0x1f);
+      }
+      ++p;
+    }
+  }
+}
+
+void St7789::St7789Data::DrawRgba8888Image(int x, int y, int width, int height,
+                                           const uint8_t *data) {
+  if (!available) {
+    return;
+  }
+
+  // It's all off the screen.
+  if (x >= JAVELIN_DISPLAY_WIDTH || y >= JAVELIN_DISPLAY_HEIGHT) {
+    return;
+  }
+
+  const int imageWidth = width;
+  const ColorRgba *rgbaData = (const ColorRgba *)data;
+  if (y < 0) {
+    height += y;
+    if (height <= 0) {
+      return;
+    }
+    rgbaData -= y * width;
+    y = 0;
+  }
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
+
+  if (x < 0) {
+    width += x;
+    if (width <= 0) {
+      return;
+    }
+    rgbaData -= x;
+    x = 0;
+  }
+
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
+    width = JAVELIN_DISPLAY_WIDTH - x;
+  }
+  const int dataAdvance = imageWidth - width;
+
+  dirty = true;
+
+  uint16_t *p = &buffer16[y * JAVELIN_DISPLAY_WIDTH + x];
+  const int bufferAdvance = JAVELIN_DISPLAY_WIDTH - width;
+
+  for (; height > 0; --height, rgbaData += dataAdvance, p += bufferAdvance) {
+    for (int xx = 0; xx < width; ++xx) {
+      const Color c = Color::From565(*p);
+      *p++ = c.Blend(*rgbaData, rgbaData->a).To565();
+      ++rgbaData;
+    }
+  }
+}
+
+void St7789::St7789Data::DrawLuminanceRange(int x, int y, int width, int height,
                                             const uint8_t *data, int min,
                                             int max) {
   if (!available) {
@@ -632,52 +740,45 @@ void St7789::St7789Data::DrawGrayscaleRange(int x, int y, int width, int height,
     return;
   }
 
+  const int imageWidth = width;
   if (y < 0) {
     height += y;
     if (height <= 0) {
       return;
     }
-    data -= y;
+    data -= y * width;
     y = 0;
   }
-
-  const size_t bytesPerColumn = height;
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
 
   if (x < 0) {
     width += x;
     if (width <= 0) {
       return;
     }
-    data -= bytesPerColumn * x;
+    data -= x;
     x = 0;
   }
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
+    width = JAVELIN_DISPLAY_WIDTH - x;
+  }
+  const int dataAdvance = imageWidth - width;
 
   dirty = true;
 
   uint16_t *p = &buffer16[y * JAVELIN_DISPLAY_WIDTH + x];
+  const int bufferAdvance = JAVELIN_DISPLAY_WIDTH - width;
 
-  const int endX = x + width;
-  if (endX > JAVELIN_DISPLAY_WIDTH) {
-    width = JAVELIN_DISPLAY_WIDTH - x;
-  }
-  const int endY = y + height;
-  if (endY > JAVELIN_DISPLAY_HEIGHT) {
-    height = JAVELIN_DISPLAY_HEIGHT - y;
-  }
-
-  while (width > 0) {
-    const uint8_t *column = data;
-    uint16_t *pColumn = p;
-    data += bytesPerColumn;
-
-    for (int yy = 0; yy < height; ++yy) {
-      if (min <= column[yy] && column[yy] < max) {
-        pColumn[yy * JAVELIN_DISPLAY_WIDTH] = drawColor565;
+  for (; height > 0; --height, data += dataAdvance, p += bufferAdvance) {
+    for (int xx = 0; xx < width; ++xx) {
+      const uint32_t v = *data++;
+      if (min <= v && v < max) {
+        *p = drawColor565;
       }
+      ++p;
     }
-
-    p++;
-    --width;
   }
 }
 
@@ -1116,10 +1217,16 @@ void Display::DrawImage(int displayId, int x, int y, int width, int height,
   case ImageFormat::ALPHA8:
     St7789::instances[displayId].DrawAlpha8Image(x, y, width, height, data);
     break;
+  case ImageFormat::ARGB1555:
+    St7789::instances[displayId].DrawArgb1555Image(x, y, width, height, data);
+    break;
+  case ImageFormat::RGBA8888:
+    St7789::instances[displayId].DrawRgba8888Image(x, y, width, height, data);
+    break;
   }
 }
 
-void Display::DrawGrayscaleRange(int displayId, int x, int y, int width,
+void Display::DrawLuminanceRange(int displayId, int x, int y, int width,
                                  int height, const uint8_t *data, int min,
                                  int max) {
 #if JAVELIN_SPLIT
@@ -1130,7 +1237,7 @@ void Display::DrawGrayscaleRange(int displayId, int x, int y, int width,
   displayId = 0;
 #endif
 
-  St7789::instances[displayId].DrawGrayscaleRange(x, y, width, height, data,
+  St7789::instances[displayId].DrawLuminanceRange(x, y, width, height, data,
                                                   min, max);
 }
 

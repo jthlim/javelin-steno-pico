@@ -334,7 +334,7 @@ void Ssd1306::Ssd1306Data::DrawBitmapImage(int x, int y, int width, int height,
   }
 }
 
-void Ssd1306::Ssd1306Data::DrawGrayscaleRange(int x, int y, int width,
+void Ssd1306::Ssd1306Data::DrawLuminanceRange(int x, int y, int width,
                                               int height, const uint8_t *data,
                                               int min, int max) {
   if (!available) {
@@ -346,55 +346,49 @@ void Ssd1306::Ssd1306Data::DrawGrayscaleRange(int x, int y, int width,
     return;
   }
 
+  const int imageWidth = width;
   if (y < 0) {
     height += y;
     if (height <= 0) {
       return;
     }
-    data -= y;
+    data -= y * width;
     y = 0;
   }
-
-  const size_t bytesPerColumn = height;
+  if (height > JAVELIN_DISPLAY_HEIGHT - y) {
+    height = JAVELIN_DISPLAY_HEIGHT - y;
+  }
 
   if (x < 0) {
     width += x;
     if (width <= 0) {
       return;
     }
-    data -= bytesPerColumn * x;
+    data -= x;
     x = 0;
   }
-
-  dirty = true;
-
-  uint8_t *p = &buffer8[x * (JAVELIN_DISPLAY_HEIGHT / 8)];
-
-  const int endX = x + width;
-  if (endX > JAVELIN_DISPLAY_WIDTH) {
+  if (width > JAVELIN_DISPLAY_WIDTH - x) {
     width = JAVELIN_DISPLAY_WIDTH - x;
   }
-  const int endY = y + height;
-  if (endY > JAVELIN_DISPLAY_HEIGHT) {
-    height = JAVELIN_DISPLAY_HEIGHT - y;
-  }
+  const int dataAdvance = imageWidth - width;
 
-  while (width > 0) {
-    const uint8_t *column = data;
-    data += bytesPerColumn;
+  dirty = true;
+  uint8_t *p = &buffer8[x * (JAVELIN_DISPLAY_HEIGHT / 8)];
 
-    for (int yy = 0; yy < height; ++yy) {
-      if (min <= column[yy] && column[yy] < max) {
+  for (int yy = 0; yy < height; ++yy, data += dataAdvance) {
+    const uint32_t yyy = y + yy;
+    uint8_t *px = p + (yyy >> 3);
+    const int bit = 1 << (yyy & 7);
+    for (int xx = 0; xx < width; ++xx, px += (JAVELIN_DISPLAY_HEIGHT / 8)) {
+      const uint32_t v = *data++;
+      if (min <= v && v < max) {
         if (drawColor) {
-          p[(yy + y) >> 3] |= 1 << ((yy + y) & 7);
+          *px |= bit;
         } else {
-          p[(yy + y) >> 3] &= ~(1 << ((yy + y) & 7));
+          *px &= ~bit;
         }
       }
     }
-
-    p += JAVELIN_DISPLAY_HEIGHT / 8;
-    --width;
   }
 }
 
@@ -737,11 +731,13 @@ void Display::DrawImage(int displayId, int x, int y, int width, int height,
   case ImageFormat::RGB565:
   case ImageFormat::RGB888:
   case ImageFormat::ALPHA8:
+  case ImageFormat::ARGB1555:
+  case ImageFormat::RGBA8888:
     break;
   }
 }
 
-void Display::DrawGrayscaleRange(int displayId, int x, int y, int width,
+void Display::DrawLuminanceRange(int displayId, int x, int y, int width,
                                  int height, const uint8_t *data, int min,
                                  int max) {
 #if JAVELIN_SPLIT
@@ -752,7 +748,7 @@ void Display::DrawGrayscaleRange(int displayId, int x, int y, int width,
   displayId = 0;
 #endif
 
-  Ssd1306::instances[displayId].DrawGrayscaleRange(x, y, width, height, data,
+  Ssd1306::instances[displayId].DrawLuminanceRange(x, y, width, height, data,
                                                    min, max);
 }
 

@@ -138,7 +138,11 @@ private:
                          const uint8_t *data);
     void DrawAlpha8Image(int x, int y, int width, int height,
                          const uint8_t *data);
-    void DrawGrayscaleRange(int x, int y, int width, int height,
+    void DrawArgb1555Image(int x, int y, int width, int height,
+                           const uint8_t *data);
+    void DrawRgba8888Image(int x, int y, int width, int height,
+                           const uint8_t *data);
+    void DrawLuminanceRange(int x, int y, int width, int height,
                             const uint8_t *data, int min, int max);
     void DrawText(int x, int y, const Font *font, TextAlignment alignment,
                   const char *text);

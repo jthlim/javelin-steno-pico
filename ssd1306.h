@@ -120,7 +120,7 @@ private:
     void DrawRect(int left, int top, int right, int bottom);
     void DrawBitmapImage(int x, int y, int width, int height,
                          const uint8_t *data);
-    void DrawGrayscaleRange(int x, int y, int width, int height,
+    void DrawLuminanceRange(int x, int y, int width, int height,
                             const uint8_t *data, int min, int max);
     void DrawText(int x, int y, const Font *font, TextAlignment alignment,
                   const char *text);
