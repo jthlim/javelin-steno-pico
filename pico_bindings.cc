@@ -637,8 +637,7 @@ void InitJavelinMaster() {
       "Sets the current steno trigger [\"first_up\", \"all_up\"]",
       SetStenoTrigger, nullptr);
   MainReportBuilder::instance.AddConsoleCommands(console);
-  console.RegisterCommand("set_host_layout", "Sets the current host layout",
-                          &HostLayouts::SetHostLayout_Binding, nullptr);
+  HostLayouts::AddConsoleCommands(console);
   PaperTape::AddConsoleCommands(console);
 #if JAVELIN_USE_EMBEDDED_STENO
   engine->AddConsoleCommands(console);
