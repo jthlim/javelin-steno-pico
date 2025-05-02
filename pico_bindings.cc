@@ -638,7 +638,6 @@ void InitJavelinMaster() {
       SetStenoTrigger, nullptr);
   MainReportBuilder::instance.AddConsoleCommands(console);
   HostLayouts::AddConsoleCommands(console);
-  PaperTape::AddConsoleCommands(console);
 #if JAVELIN_USE_EMBEDDED_STENO
   engine->AddConsoleCommands(console);
   console.RegisterCommand("print_system", "Prints stenography system data",
