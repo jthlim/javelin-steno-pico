@@ -22,7 +22,6 @@
 #include "javelin/hal/bootloader.h"
 #include "javelin/hal/connection.h"
 #include "javelin/hal/display.h"
-#include "javelin/hal/gpio.h"
 #include "javelin/hal/rgb.h"
 #include "javelin/host_layout.h"
 #include "javelin/orthography.h"
@@ -491,7 +490,6 @@ void InitCommonCommands() {
                           ListParametersBinding, nullptr);
 
   Flash::AddConsoleCommands(console);
-  Gpio::AddConsoleCommands(console);
   Rgb::AddConsoleCommands(console);
   Bootloader::AddConsoleCommands(console);
   ButtonScriptManager::GetInstance().AddConsoleCommands(console);

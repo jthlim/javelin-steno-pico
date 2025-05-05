@@ -151,6 +151,7 @@ target_sources(${NAME} PUBLIC
   javelin/hal/connection.cc
   javelin/hal/display.cc
   javelin/hal/gpio.cc
+  javelin/hal/infrared.cc
   javelin/hal/mouse.cc
   javelin/hal/power.cc
   javelin/hal/rgb.cc
