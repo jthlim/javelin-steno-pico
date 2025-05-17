@@ -21,7 +21,7 @@
 
 //---------------------------------------------------------------------------
 
-enum St7789Command : uint8_t {
+enum class St7789Command : uint8_t {
   SOFTWARE_RESET = 0x01,
   SLEEP_ON = 0x10,
   SLEEP_OFF = 0x11,

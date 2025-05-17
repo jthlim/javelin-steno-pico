@@ -9,8 +9,8 @@
 //---------------------------------------------------------------------------
 
 struct Font;
-enum FontId : int;
-enum St7789Command : uint8_t;
+enum class FontId : uint32_t;
+enum class St7789Command : uint8_t;
 
 //---------------------------------------------------------------------------
 
