@@ -3,7 +3,6 @@
 #include "usb_descriptors.h"
 #include "class/hid/hid.h"
 #include <hardware/flash.h>
-
 #include <tusb.h>
 
 #include JAVELIN_BOARD_CONFIG
@@ -238,21 +237,8 @@ extern "C" const uint8_t *tud_hid_descriptor_report_cb(uint8_t instance) {
 
 #define CONFIG_TOTAL_LEN                                                       \
   (TUD_CONFIG_DESC_LEN + 2 * TUD_HID_DESC_LEN + TUD_HID_INOUT_DESC_LEN +       \
-   TUD_CDC_DESC_LEN)
+   TUD_CDC_DESC_LEN + TUD_MIDI_DESC_LEN)
 
-#if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X ||                                      \
-    CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
-// LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
-// 1 Interrupt, 2 Bulk, 3 Iso, 4 Interrupt, 5 Bulk etc ...
-// #define EPNUM_KEYBOARD 0x81
-
-// #define EPNUM_CONSOLE_OUT 0x04
-// #define EPNUM_CONSOLE_IN 0x84
-
-// #define EPNUM_CDC_NOTIF 0x87
-// #define EPNUM_CDC_OUT 0x08
-// #define EPNUM_CDC_IN 0x88
-#else
 #define EPNUM_KEYBOARD 0x81
 
 #define EPNUM_PLOVER_HID 0x82
@@ -263,7 +249,9 @@ extern "C" const uint8_t *tud_hid_descriptor_report_cb(uint8_t instance) {
 #define EPNUM_CDC_NOTIF 0x84
 #define EPNUM_CDC_OUT 0x05
 #define EPNUM_CDC_IN 0x85
-#endif
+
+#define EPNUM_MIDI_OUT 0x06
+#define EPNUM_MIDI_IN 0x86
 
 const uint8_t MAIN_CONFIGURATION_DESCRIPTOR[] = {
     // Config number, interface count, string index, total length, attribute,
@@ -293,6 +281,9 @@ const uint8_t MAIN_CONFIGURATION_DESCRIPTOR[] = {
 
     TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT,
                        EPNUM_CDC_IN, 64),
+
+    // Interface number, string index, EP Out & EP In address, EP size
+    TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 0, EPNUM_MIDI_OUT, EPNUM_MIDI_IN, 64),
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR

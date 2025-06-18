@@ -1,5 +1,6 @@
 //---------------------------------------------------------------------------
 
+#include "pico_serial_port.h"
 #include JAVELIN_BOARD_CONFIG
 
 #include "console_report_buffer.h"
@@ -7,6 +8,7 @@
 #include "javelin/console_input_buffer.h"
 #include "javelin/keyboard_led_status.h"
 #include "javelin/split/split_console.h"
+#include "javelin/split/split_midi.h"
 #include "javelin/split/split_serial_buffer.h"
 #include "javelin/split/split_usb_status.h"
 #include "javelin/split/split_version.h"
@@ -16,6 +18,7 @@
 #include "pico_button_state.h"
 #include "pico_crc32.h"
 #include "pico_encoder_state.h"
+#include "pico_midi.h"
 #include "pico_split.h"
 #include "pico_timer.h"
 #include "pico_ws2812.h"
@@ -143,18 +146,6 @@ extern "C" void tud_hid_set_report_cb(uint8_t instance, uint8_t reportId,
 
 //---------------------------------------------------------------------------
 
-static void cdc_task() {
-  for (uint8_t itf = 0; itf < CFG_TUD_CDC; itf++) {
-    if (tud_cdc_n_available(itf)) {
-      uint8_t buf[64];
-      const uint32_t count = tud_cdc_n_read(itf, buf, sizeof(buf));
-      // Do nothing with it.
-    }
-  }
-}
-
-//---------------------------------------------------------------------------
-
 // By default, the system will run as fast as possible with 100us pauses.
 //
 // This interrupt handling is a fallback to catch key and encoder changes
@@ -203,7 +194,8 @@ void DoMasterRunLoop() {
 
     MasterTask::container->Update();
     PicoSplit::Update();
-    cdc_task();
+    PicoSerialPort::HandleIncomingData();
+    PicoMidi::HandleIncomingData();
 
     FlushBuffers();
     ConsoleInputBuffer::Process();
@@ -231,7 +223,8 @@ void DoSlaveRunLoop() {
     tud_task(); // tinyusb device task
     SlaveTask::container->Update();
     PicoSplit::Update();
-    cdc_task();
+    PicoSerialPort::HandleIncomingData();
+    PicoMidi::HandleIncomingData();
 
     SplitHidReportBuffer::Update();
     FlushBuffers();
@@ -285,6 +278,7 @@ int main(void) {
     Ws2812::RegisterTxHandler();
     SplitHidReportBuffer::RegisterMasterHandlers();
     SplitSerialBuffer::RegisterTxHandler();
+    SplitMidi::RegisterTxHandler();
     SplitVersion::RegisterRxHandler();
     Pinnacle::RegisterRxHandler();
     Ssd1306::RegisterMasterHandlers();
@@ -308,6 +302,7 @@ int main(void) {
     Ws2812::RegisterRxHandler();
     SplitHidReportBuffer::RegisterSlaveHandlers();
     SplitSerialBuffer::RegisterRxHandler();
+    SplitMidi::RegisterRxHandler();
     SplitVersion::RegisterTxHandler();
     Pinnacle::RegisterTxHandler();
     Ssd1306::RegisterSlaveHandlers();

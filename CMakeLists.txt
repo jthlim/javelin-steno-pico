@@ -85,6 +85,7 @@ target_sources(${NAME} PUBLIC
   pico_encoder_state.cc
   pico_flash.cc
   pico_gpio.cc
+  pico_midi.cc
   pico_orthography.cc
   pico_random.cc
   pico_serial_port.cc
@@ -186,6 +187,7 @@ target_sources(${NAME} PUBLIC
   javelin/split/split.cc
   javelin/split/split_console.cc
   javelin/split/split_key_state.cc
+  javelin/split/split_midi.cc
   javelin/split/split_power_override.cc
   javelin/split/split_serial_buffer.cc
   javelin/split/split_usb_status.cc

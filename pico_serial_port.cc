@@ -1,5 +1,6 @@
 //---------------------------------------------------------------------------
 
+#include "pico_serial_port.h"
 #include "javelin/hal/serial_port.h"
 #include "javelin/split/split_serial_buffer.h"
 #include <tusb.h>
@@ -30,6 +31,18 @@ void SerialPort::SendData(const uint8_t *data, size_t length) {
       SplitSerialBuffer::Add(data, length);
     }
 #endif
+  }
+}
+
+//---------------------------------------------------------------------------
+
+void PicoSerialPort::HandleIncomingData() {
+  for (uint8_t itf = 0; itf < CFG_TUD_CDC; itf++) {
+    if (tud_cdc_n_available(itf)) {
+      uint8_t buf[64];
+      const uint32_t count = tud_cdc_n_read(itf, buf, sizeof(buf));
+      // Do nothing with it.
+    }
   }
 }
 
