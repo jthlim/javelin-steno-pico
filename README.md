@@ -26,6 +26,25 @@
 
 You should now have a uf2 file that can be copied to the device.
 
+## Using javelin-steno-pico with your own hardware.
+
+This process involves uploading all of the data to the keyboard, then
+overwriting the bit of the firmware that is specific to interfacing with
+your keyboard's hardware.
+
+1. First, use the online firmware builder to build a firmware that matches
+   your chip. It is recommended to use starboard rp2040 or rp2350.
+2. Copy one of the config/.h files to create a new configuration.
+3. Update your pin/button configuration there.
+4. JAVELIN_SCRIPT_CONFIGURATION is a JSON that enables the online web tools
+   to provide a visual editor configuration.
+5. Build the uf2 firmware and upload it to your keyboard.
+6. Use the web Script tool to upload a configuration to your keyboard. This
+   maps buttons to steno keys/other actions.
+
+If you use a split keyboard, then you will need to repeat this with a *_pair.h
+firmware for the other side.
+
 # Contributions
 
 This project is a snapshot of internal repositories and is not accepting any
