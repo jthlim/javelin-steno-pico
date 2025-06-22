@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 4.0)
 cmake_policy(SET CMP0076 NEW)
 
 set(NAME javelin-steno-pico)

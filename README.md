@@ -2,14 +2,16 @@
 
 ## Build Instructions
 
-1. Install [pico-sdk](https://github.com/raspberrypi/pico-sdk) and ensure that
+1. Ensure that you have a recent Arm GNU Toolchain (>=12) and CMake (>=4) installed.
+
+2. Install [pico-sdk](https://github.com/raspberrypi/pico-sdk) and ensure that
    you can build the examples.
 
-2. Clone [javelin-steno](https://github.com/jthlim/javelin-steno) repository.
+3. Clone [javelin-steno](https://github.com/jthlim/javelin-steno) repository.
 
-3. Clone this repository.
+4. Clone this repository.
 
-4. From within this repository, link the javelin-steno repository:
+5. From within this repository, link the javelin-steno repository:
 
 ```
 > ln -s <path-to-javelin-steno> javelin
