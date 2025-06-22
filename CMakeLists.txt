@@ -35,7 +35,6 @@ if (PICO_PLATFORM STREQUAL "rp2040")
     -DJAVELIN_PICO_PLATFORM=2040
     -DSYS_CLK_MHZ=200
   )
-  set (SIZE "$ENV{PICO_TOOLCHAIN_PATH}/bin/arm-none-eabi-size")
 elseif (PICO_PLATFORM STREQUAL "rp2350-arm-s")
   add_definitions(
     -flto=auto
@@ -43,13 +42,11 @@ elseif (PICO_PLATFORM STREQUAL "rp2350-arm-s")
     -DJAVELIN_USE_CUSTOM_POP_COUNT=1
     -DJAVELIN_PICO_PLATFORM=2350
   )
-  set (SIZE "$ENV{PICO_TOOLCHAIN_PATH}/bin/arm-none-eabi-size")
 elseif (PICO_PLATFORM STREQUAL "rp2350-riscv")
   add_definitions(
     -DJAVELIN_CPU_HAZARD_3=1
     -DJAVELIN_PICO_PLATFORM=2350
   )
-  set (SIZE "$ENV{PICO_TOOLCHAIN_PATH}/bin/riscv32-unknown-elf-size")
 endif()
 
 project(${NAME} C CXX ASM)
@@ -234,6 +231,7 @@ target_link_libraries(${NAME}
 # create map/bin/hex file etc.
 pico_add_extra_outputs(${NAME})
 
+string(REPLACE "-g++" "-size" SIZE ${PICO_COMPILER_CXX})
 add_custom_command(TARGET ${NAME} POST_BUILD
   COMMAND ${SIZE} javelin-steno-pico.elf
 )
