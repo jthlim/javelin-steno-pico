@@ -581,6 +581,10 @@ void InitJavelinMaster() {
         ignoreSuffixes.AddIfUnique(p - 3);
       }
     }
+    ignoreSuffixes.Sort(
+        [](const uint8_t *const *a, const uint8_t *const *b) -> int {
+          return intptr_t(*a) - intptr_t(*b);
+        });
 
     dictionary =
         new (reverseSuffixDictionaryContainer) StenoReverseSuffixDictionary(
