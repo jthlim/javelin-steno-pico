@@ -150,7 +150,6 @@ void MasterTask::Update() {
   }
 
   ButtonScriptManager::GetInstance().Tick(scriptTime);
-  TimerManager::instance.ProcessTimers(scriptTime);
 }
 
 void MasterTask::ProcessQueue() {
@@ -272,9 +271,7 @@ void SlaveTask::Update() {
   Pinnacle::Update();
   PicoEncoderState::Update();
 
-  const uint32_t scriptTime = Clock::GetMilliseconds();
-  ButtonScriptManager::GetInstance().Tick(scriptTime);
-  TimerManager::instance.ProcessTimers(scriptTime);
+  ButtonScriptManager::GetInstance().Tick(Clock::GetMilliseconds());
   UpdateQueue();
 }
 

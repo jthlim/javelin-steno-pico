@@ -82,10 +82,10 @@ const uint8_t keyboardReportDescriptor[] = {
       HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
 
       // 2 input bytes. Keyboard page array.
-      HID_USAGE_MIN(0x68),
-      HID_USAGE_MAX(0x9f),
-      HID_LOGICAL_MIN(0x68),
-      HID_LOGICAL_MAX_N(0x9f, 2),
+      HID_USAGE_MIN(0x00),
+      HID_USAGE_MAX(0xff),
+      HID_LOGICAL_MIN(0x00),
+      HID_LOGICAL_MAX_N(0xff, 2),
       HID_REPORT_COUNT(2),
       HID_REPORT_SIZE(8),
       HID_INPUT(HID_DATA | HID_ARRAY | HID_ABSOLUTE),
