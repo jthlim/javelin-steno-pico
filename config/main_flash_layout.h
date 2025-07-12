@@ -24,7 +24,8 @@ const uint8_t *const SCRIPT_BYTE_CODE = (const uint8_t *)0x1004a100;
 const StenoSystem *const SYSTEM_ADDRESS = (const StenoSystem *)0x10052000;
 const uint8_t *const STENO_WORD_LIST_ADDRESS = (const uint8_t *)0x10054000;
 static const struct HostLayouts *const HOST_LAYOUTS_ADDRESS =
-    (struct HostLayouts *)0x103de000;
+    (struct HostLayouts *)0x103dd000;
+static const size_t MAXIMUM_HOST_LAYOUTS_SIZE = 0x3000;
 static const struct ScriptStorageData *const SCRIPT_STORAGE_ADDRESS =
     (struct ScriptStorageData *)0x103e0000;
 static const size_t MAXIMUM_SCRIPT_STORAGE_SIZE = 0x20000;

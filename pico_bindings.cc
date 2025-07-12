@@ -285,7 +285,9 @@ static const ParameterData PARAMETER_DATA[] = {
 #endif
     {"flash_memory_address", (void *)0x10000000},
 #if JAVELIN_USE_EMBEDDED_STENO
+    {"host_layouts_address", (void *)HOST_LAYOUTS_ADDRESS},
     {"maximum_dictionary_size", (void *)MAXIMUM_MAP_DICTIONARY_SIZE},
+    {"maximum_host_layouts_size", (void *)MAXIMUM_HOST_LAYOUTS_SIZE},
 #endif
     {"maximum_script_size", (void *)MAXIMUM_BUTTON_SCRIPT_SIZE},
 #if JAVELIN_USE_SCRIPT_STORAGE
