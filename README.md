@@ -35,7 +35,9 @@ overwriting the bit of the firmware that is specific to interfacing with
 your keyboard's hardware.
 
 1. First, use the online firmware builder to build a firmware that matches
-   your chip. It is recommended to use starboard rp2040 or rp2350.
+   your chip. It is recommended to use starboard rp2040 or rp2350. Upload
+   this to your board and confirm that you can connect to the web tools
+   and do a lookup.
 
 2. Copy one of the config/.h files to create a new configuration.
 
