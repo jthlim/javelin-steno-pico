@@ -26,6 +26,12 @@
 > make
 ```
 
+   For rp2350 boards, add `-DPICO_PLATFORM=rp2350-arm-s`, e.g.,
+```
+> cmake .. -DJAVELIN_BOARD=starboard_rp2350 -DPICO_PLATFORM=rp2350-arm-s
+```
+
+
 You should now have a uf2 file that can be copied to the device.
 
 ## Using javelin-steno-pico with your own hardware.
@@ -39,7 +45,7 @@ your keyboard's hardware.
    this to your board and confirm that you can connect to the web tools
    and do a lookup.
 
-2. Copy one of the config/.h files to create a new configuration.
+2. Copy one of the `config/*.h` files to create a new configuration.
 
    Example configurations:
 
@@ -50,8 +56,8 @@ your keyboard's hardware.
 
 3. Update your pin/button configuration there.
 
-4. JAVELIN_SCRIPT_CONFIGURATION is a JSON that enables the online web tools
-   to provide a visual editor configuration.
+4. `JAVELIN_SCRIPT_CONFIGURATION` inside the config file is a JSON that enables
+   the online web tools to provide a visual editor configuration.
 
 5. Build the uf2 firmware and upload it to your keyboard.
 
