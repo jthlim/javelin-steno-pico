@@ -52,7 +52,12 @@ public:
 #endif
 
 private:
-  class Ssd1306Availability : public SplitTxHandler, public SplitRxHandler {
+  class Ssd1306Availability
+#if JAVELIN_SPLIT
+      : public SplitTxHandler,
+        public SplitRxHandler
+#endif
+  {
   public:
     void operator=(bool value) { available = value; }
     bool operator!() const { return !available; }
@@ -66,13 +71,18 @@ private:
                            // availability packet comes in.
     bool dirty = true;
 
-    virtual void UpdateBuffer(TxBuffer &buffer);
-    virtual void OnDataReceived(const void *data, size_t length);
-    virtual void OnReceiveConnectionReset() { available = false; }
-    virtual void OnTransmitConnectionReset() { dirty = true; }
+    void UpdateBuffer(TxBuffer &buffer);
+    void OnDataReceived(const void *data, size_t length);
+    void OnReceiveConnectionReset() { available = false; }
+    void OnTransmitConnectionReset() { dirty = true; }
   };
 
-  class Ssd1306Control : public SplitTxHandler, public SplitRxHandler {
+  class Ssd1306Control
+#if JAVELIN_SPLIT
+      : public SplitTxHandler,
+        public SplitRxHandler
+#endif
+  {
   public:
     void Update();
     void SetScreenOn(bool on) {
@@ -100,12 +110,17 @@ private:
     static constexpr int DIRTY_FLAG_SCREEN_ON = 1;
     static constexpr int DIRTY_FLAG_CONTRAST = 2;
 
-    virtual void UpdateBuffer(TxBuffer &buffer);
-    virtual void OnDataReceived(const void *data, size_t length);
-    virtual void OnTransmitConnectionReset();
+    void UpdateBuffer(TxBuffer &buffer);
+    void OnDataReceived(const void *data, size_t length);
+    void OnTransmitConnectionReset();
   };
 
-  class Ssd1306Data : public SplitTxHandler, public SplitRxHandler {
+  class Ssd1306Data
+#if JAVELIN_SPLIT
+      : public SplitTxHandler,
+        public SplitRxHandler
+#endif
+  {
   public:
     Ssd1306Availability available;
     Ssd1306Control control;
@@ -139,9 +154,9 @@ private:
 
     bool InitializeSsd1306();
 
-    virtual void UpdateBuffer(TxBuffer &buffer);
-    virtual void OnTransmitConnectionReset() { dirty = true; }
-    virtual void OnDataReceived(const void *data, size_t length);
+    void UpdateBuffer(TxBuffer &buffer);
+    void OnTransmitConnectionReset() { dirty = true; }
+    void OnDataReceived(const void *data, size_t length);
   };
 
   static uint16_t dmaBuffer[JAVELIN_OLED_WIDTH * JAVELIN_OLED_HEIGHT / 8 + 1];
@@ -164,7 +179,7 @@ private:
   }
   static Ssd1306Data instances[2];
 #else
-  static Ssd1306Data &GetInstance() { return instance[0]; }
+  static Ssd1306Data &GetInstance() { return instances[0]; }
   static Ssd1306Data instances[1];
 #endif
 

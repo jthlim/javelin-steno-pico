@@ -58,7 +58,12 @@ public:
 #endif
 
 private:
-  class St7789Availability : public SplitTxHandler, public SplitRxHandler {
+  class St7789Availability
+#if JAVELIN_SPLIT
+      : public SplitTxHandler,
+        public SplitRxHandler
+#endif
+  {
   public:
     void operator=(bool value) { available = value; }
     bool operator!() const { return !available; }
@@ -72,13 +77,18 @@ private:
                            // availability packet comes in.
     bool dirty = true;
 
-    virtual void UpdateBuffer(TxBuffer &buffer);
-    virtual void OnDataReceived(const void *data, size_t length);
-    virtual void OnReceiveConnectionReset() { available = false; }
-    virtual void OnTransmitConnectionReset() { dirty = true; }
+    void UpdateBuffer(TxBuffer &buffer);
+    void OnDataReceived(const void *data, size_t length);
+    void OnReceiveConnectionReset() { available = false; }
+    void OnTransmitConnectionReset() { dirty = true; }
   };
 
-  class St7789Control : public SplitTxHandler, public SplitRxHandler {
+  class St7789Control
+#if JAVELIN_SPLIT
+      : public SplitTxHandler,
+        public SplitRxHandler
+#endif
+  {
   public:
     void Update();
     void SetScreenOn(bool on) {
@@ -106,12 +116,17 @@ private:
     static constexpr int DIRTY_FLAG_SCREEN_ON = 1;
     static constexpr int DIRTY_FLAG_CONTRAST = 2;
 
-    virtual void UpdateBuffer(TxBuffer &buffer);
-    virtual void OnDataReceived(const void *data, size_t length);
-    virtual void OnTransmitConnectionReset();
+    void UpdateBuffer(TxBuffer &buffer);
+    void OnDataReceived(const void *data, size_t length);
+    void OnTransmitConnectionReset();
   };
 
-  class St7789Data : public SplitTxHandler, public SplitRxHandler {
+  class St7789Data
+#if JAVELIN_SPLIT
+      : public SplitTxHandler,
+        public SplitRxHandler
+#endif
+  {
   public:
     St7789Availability available;
     St7789Control control;
@@ -169,9 +184,9 @@ private:
 
     void SendScreenData() const;
 
-    virtual void UpdateBuffer(TxBuffer &buffer);
-    virtual void OnTransmitConnectionReset() { dirty = true; }
-    virtual void OnDataReceived(const void *data, size_t length);
+    void UpdateBuffer(TxBuffer &buffer);
+    void OnTransmitConnectionReset() { dirty = true; }
+    void OnDataReceived(const void *data, size_t length);
   };
 
   static void SendCommand(St7789Command command, const void *data = nullptr,
@@ -189,7 +204,7 @@ private:
   }
   static St7789Data instances[2];
 #else
-  static St7789Data &GetInstance() { return instance[0]; }
+  static St7789Data &GetInstance() { return instances[0]; }
   static St7789Data instances[1];
 #endif
 

@@ -39,4 +39,7 @@ const size_t STENO_USER_DICTIONARY_SIZE = 0x40000;
 const size_t MAXIMUM_MAP_DICTIONARY_SIZE = 0xbc0000;
 const size_t MAXIMUM_BUTTON_SCRIPT_SIZE = 0x7f00;
 
+// Only used if JAVELIN_USE_EMBEDDED_STENO is 0.
+const intptr_t ASSET_STORAGE_START_ADDRESS = 0x10400000;
+
 //---------------------------------------------------------------------------

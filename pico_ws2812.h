@@ -8,6 +8,9 @@
 
 #if JAVELIN_RGB
 
+#define WS2812_GRB 0
+#define WS2812_RGB 1
+
 class Ws2812 {
 public:
   static void Initialize();
@@ -16,7 +19,11 @@ public:
   static size_t GetCount() { return JAVELIN_RGB_COUNT; }
 
   static void SetRgb(size_t pixelId, int r, int g, int b) {
+#if JAVELIN_RGB_ORDER == WS2812_RGB
+    instance.SetRgb(pixelId, (r << 24) | (g << 16) | (b << 8));
+#else
     instance.SetRgb(pixelId, (r << 16) | (g << 24) | (b << 8));
+#endif
   }
   static void SetRgb(size_t pixelId, uint32_t ws2812Color) {
     instance.SetRgb(pixelId, ws2812Color);

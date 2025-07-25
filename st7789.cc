@@ -139,14 +139,36 @@ void St7789::St7789Data::Initialize() {
   static const uint8_t interfaceFormat = 0x55; // 565 rgb interface + control.
   SendCommand(St7789Command::SET_INTERFACE_PIXEL_FORMAT, &interfaceFormat, 1);
 
+#if JAVELIN_DISPLAY_ROTATION == 0
+  constexpr int xOffset = (240 - JAVELIN_DISPLAY_SCREEN_WIDTH) / 2;
+  constexpr int yOffset = (320 - JAVELIN_DISPLAY_SCREEN_HEIGHT) / 2;
+#elif JAVELIN_DISPLAY_ROTATION == 90
+  constexpr int xOffset = (320 - JAVELIN_DISPLAY_WIDTH) / 2;
+  constexpr int yOffset = (240 - JAVELIN_DISPLAY_HEIGHT) / 2;
+  static const uint8_t memoryDataAccess =
+      0xa0; // Bottom to top, left to right, Reverse.
+  SendCommand(St7789Command::MEMORY_DATA_ACCESS_CONTROL, &memoryDataAccess, 1);
+#elif JAVELIN_DISPLAY_ROTATION == 180
+  constexpr int xOffset = (240 - JAVELIN_DISPLAY_SCREEN_WIDTH) / 2;
+  constexpr int yOffset = (320 - JAVELIN_DISPLAY_SCREEN_HEIGHT) / 2;
+  static const uint8_t memoryDataAccess =
+      0xc0; // Bottom to top, right to left, normal.
+  SendCommand(St7789Command::MEMORY_DATA_ACCESS_CONTROL, &memoryDataAccess, 1);
+#elif JAVELIN_DISPLAY_ROTATION == 270
+  constexpr int xOffset = (320 - JAVELIN_DISPLAY_WIDTH) / 2;
+  constexpr int yOffset = (240 - JAVELIN_DISPLAY_HEIGHT) / 2;
+  static const uint8_t memoryDataAccess =
+      0x60; // Top to bottom, right to left, Reverse.
+  SendCommand(St7789Command::MEMORY_DATA_ACCESS_CONTROL, &memoryDataAccess, 1);
+#else
+#error Rotation not supported
+#endif
+
   SendCommand(St7789Command::DISPLAY_INVERSION_ON);
   SendCommand(St7789Command::SET_DISPLAY_MODE_NORMAL, NULL, 0);
 
-  constexpr int xOffset = (240 - JAVELIN_DISPLAY_SCREEN_WIDTH) / 2;
-  constexpr int yOffset = (320 - JAVELIN_DISPLAY_SCREEN_HEIGHT) / 2;
-
-  SetLR(xOffset, xOffset + JAVELIN_DISPLAY_SCREEN_WIDTH - 1);
-  SetTB(yOffset, yOffset + JAVELIN_DISPLAY_SCREEN_HEIGHT - 1);
+  SetLR(xOffset, xOffset + JAVELIN_DISPLAY_WIDTH - 1);
+  SetTB(yOffset, yOffset + JAVELIN_DISPLAY_HEIGHT - 1);
 
   dma4->destination = &spi_get_hw(JAVELIN_DISPLAY_SPI)->dr;
   dma4->count = sizeof(buffer32) / 2;
@@ -156,7 +178,7 @@ void St7789::St7789Data::Initialize() {
       .incrementRead = true,
       .incrementWrite = false,
       .chainToDma = 4,
-      .transferRequest = PicoDmaTransferRequest::SPI1_TX,
+      .transferRequest = PicoDmaTransferRequest::JAVELIN_DISPLAY_TX_DMA,
       .sniffEnable = false,
   };
   dma4->control = dmaControl;
