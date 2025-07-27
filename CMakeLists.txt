@@ -52,6 +52,7 @@ endif()
 project(${NAME} C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--print-memory-usage")
 
 pico_sdk_init()
 
@@ -231,8 +232,3 @@ target_link_libraries(${NAME}
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(${NAME})
-
-string(REPLACE "-g++" "-size" SIZE ${PICO_COMPILER_CXX})
-add_custom_command(TARGET ${NAME} POST_BUILD
-  COMMAND ${SIZE} javelin-steno-pico.elf
-)
