@@ -189,46 +189,6 @@ void StenoStrokeCapture::DrawStrokes(int displayId) {
                           font, TextAlignment::MIDDLE, "strokes");
 }
 
-void StenoStrokeCapture::SetAutoDraw_Binding(void *context,
-                                             const char *commandLine) {
-  StenoStrokeCapture *capture = (StenoStrokeCapture *)context;
-
-  const char *p = strchr(commandLine, ' ');
-  if (!p) {
-    Console::Printf("ERR No parameters specified\n\n");
-    return;
-  }
-  int displayId = 0;
-  ++p;
-#if !JAVELIN_SPLIT
-  if ('a' <= *p && *p <= 'z')
-    goto skipDisplayId;
-#endif
-  p = Str::ParseInteger(&displayId, p, false);
-  if (!p || *p != ' ') {
-    Console::Printf("ERR displayId parameter missing\n\n");
-    return;
-  }
-  ++p;
-
-skipDisplayId:
-  if (Str::Eq(p, "none")) {
-    capture->SetAutoDraw(displayId, AutoDraw::NONE);
-  } else if (Str::Eq(p, "paper_tape")) {
-    capture->SetAutoDraw(displayId, AutoDraw::PAPER_TAPE);
-  } else if (Str::Eq(p, "steno_layout")) {
-    capture->SetAutoDraw(displayId, AutoDraw::STENO_LAYOUT);
-  } else if (Str::Eq(p, "wpm")) {
-    capture->SetAutoDraw(displayId, AutoDraw::WPM);
-  } else if (Str::Eq(p, "strokes")) {
-    capture->SetAutoDraw(displayId, AutoDraw::STROKES);
-  } else {
-    Console::Printf("ERR Unable to set auto draw: \"%s\"\n\n", p);
-    return;
-  }
-  Console::SendOk();
-}
-
 #if JAVELIN_USE_EMBEDDED_STENO
 void Display::SetAutoDraw(int displayId, int autoDrawId) {
   StenoStrokeCapture::container->SetAutoDraw(displayId, (AutoDraw)autoDrawId);

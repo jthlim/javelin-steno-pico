@@ -559,7 +559,7 @@ void Ssd1306::Ssd1306Data::Initialize() {
       .incrementRead = true,
       .incrementWrite = false,
       .chainToDma = 4,
-      .transferRequest = PicoDmaTransferRequest::I2C1_TX,
+      .transferRequest = PicoDmaTransferRequest::JAVELIN_OLED_TX_DMA,
       .sniffEnable = false,
   };
   dma4->control = dmaControl;

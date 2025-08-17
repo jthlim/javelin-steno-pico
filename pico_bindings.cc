@@ -649,14 +649,6 @@ void InitJavelinMaster() {
                           &StenoSystem::Print_Binding, (void *)SYSTEM_ADDRESS);
 #endif
 
-#if JAVELIN_DISPLAY_DRIVER
-  console.RegisterCommand("set_auto_draw",
-                          "Set a display auto-draw mode [\"none\", "
-                          "\"paper_tape\", \"steno_layout\", \"wpm\"]",
-                          StenoStrokeCapture::SetAutoDraw_Binding,
-                          &passthroughContainer.value);
-#endif
-
 #if JAVELIN_USE_EMBEDDED_STENO
   userDictionary->AddConsoleCommands(console);
 

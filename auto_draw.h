@@ -29,7 +29,6 @@ public:
 
   void Update(bool onStrokeInput);
 
-  static void SetAutoDraw_Binding(void *context, const char *commandLine);
   void SetAutoDraw(int displayId, AutoDraw autoDrawId);
 
   static JavelinStaticAllocate<StenoStrokeCapture> container;
