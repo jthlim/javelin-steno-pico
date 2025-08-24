@@ -21,7 +21,7 @@ void SplitSerialBuffer::SplitSerialBufferData::OnDataReceived(const void *data,
 
 //---------------------------------------------------------------------------
 
-void SerialPort::SendData(const uint8_t *data, size_t length) {
+void SerialPort::SendData(const void *data, size_t length) {
   if (tud_cdc_connected()) {
     tud_cdc_write(data, length);
     tud_cdc_write_flush();

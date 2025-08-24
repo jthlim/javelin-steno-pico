@@ -170,6 +170,7 @@ target_sources(${NAME} PUBLIC
   javelin/processor/gemini.cc
   javelin/processor/jeff_modifiers.cc
   javelin/processor/paper_tape.cc
+  javelin/processor/passport.cc
   javelin/processor/plover_hid.cc
   javelin/processor/procat.cc
   javelin/processor/processor.cc

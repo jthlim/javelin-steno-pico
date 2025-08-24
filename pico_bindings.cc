@@ -30,6 +30,7 @@
 #include "javelin/processor/gemini.h"
 #include "javelin/processor/jeff_modifiers.h"
 #include "javelin/processor/paper_tape.h"
+#include "javelin/processor/passport.h"
 #include "javelin/processor/passthrough.h"
 #include "javelin/processor/plover_hid.h"
 #include "javelin/processor/procat.h"
@@ -80,6 +81,7 @@ static JavelinStaticAllocate<StenoUserDictionary> userDictionaryContainer;
 static PaperTape paperTape;
 static StenoGemini gemini(&paperTape);
 static StenoTxBolt txBolt(&paperTape);
+static StenoPassport passport(&paperTape);
 static StenoProcat procat(&paperTape);
 static StenoPloverHid ploverHid(&paperTape);
 static StenoProcessorElement *processors;
@@ -231,6 +233,8 @@ void SetStenoMode(void *context, const char *commandLine) {
     passthroughContainer->SetNext(&gemini);
   } else if (Str::Eq(stenoMode, "tx_bolt")) {
     passthroughContainer->SetNext(&txBolt);
+  } else if (Str::Eq(stenoMode, "passport")) {
+    passthroughContainer->SetNext(&passport);
   } else if (Str::Eq(stenoMode, "procat")) {
     passthroughContainer->SetNext(&procat);
   } else if (Str::Eq(stenoMode, "plover_hid")) {
@@ -356,6 +360,8 @@ static void GetStenoMode() {
     Console::Printf("gemini\n\n");
   } else if (processor == &txBolt) {
     Console::Printf("tx_bolt\n\n");
+  } else if (processor == &passport) {
+    Console::Printf("passport\n\n");
   } else if (processor == &procat) {
     Console::Printf("procat\n\n");
   } else if (processor == &ploverHid) {
@@ -624,19 +630,16 @@ void InitJavelinMaster() {
   InitCommonCommands();
   Console &console = Console::instance;
 
+  console.RegisterCommand(
+      "set_steno_mode",
 #if JAVELIN_USE_EMBEDDED_STENO
-  console.RegisterCommand(
-      "set_steno_mode",
       "Sets the current steno mode [\"embedded\", "
-      "\"gemini\", \"tx_bolt\", \"procat\", \"plover_hid\"]",
-      SetStenoMode, nullptr);
 #else
-  console.RegisterCommand(
-      "set_steno_mode",
       "Sets the current steno mode ["
-      "\"gemini\", \"tx_bolt\", \"procat\", \"plover_hid\"]",
-      SetStenoMode, nullptr);
 #endif
+      "\"gemini\", \"tx_bolt\", \"passport\", \"procat\", \"plover_hid\"]",
+      SetStenoMode, nullptr);
+
   console.RegisterCommand(
       "set_steno_trigger",
       "Sets the current steno trigger [\"first_up\", \"all_up\"]",
