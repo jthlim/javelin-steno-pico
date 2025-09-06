@@ -280,12 +280,15 @@ struct DynamicParameterData {
 };
 
 static const ParameterData PARAMETER_DATA[] = {
+    {"analog_input_count", (void *)0},
     {"button_count", (void *)BUTTON_COUNT},
 #if JAVELIN_USE_EMBEDDED_STENO
     {"dictionary_address", STENO_MAP_DICTIONARY_COLLECTION_ADDRESS},
 #endif
 #if JAVELIN_ENCODER
     {"encoder_count", (void *)JAVELIN_ENCODER_COUNT},
+#else
+    {"encoder_count", (void *)0},
 #endif
     {"flash_memory_address", (void *)0x10000000},
 #if JAVELIN_USE_EMBEDDED_STENO
@@ -300,6 +303,8 @@ static const ParameterData PARAMETER_DATA[] = {
 #endif
 #if JAVELIN_POINTER
     {"pointer_count", (void *)JAVELIN_POINTER_COUNT},
+#else
+    {"pointer_count", (void *)0},
 #endif
     {"script_address", SCRIPT_BYTE_CODE},
     {"script_byte_code_version", (void *)SCRIPT_BYTE_CODE_VERSION},
