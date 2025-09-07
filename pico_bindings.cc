@@ -604,6 +604,7 @@ void InitJavelinMaster() {
         new (reverseSuffixDictionaryContainer) StenoReverseSuffixDictionary(
             dictionary,
             (const uint8_t *)STENO_MAP_DICTIONARY_COLLECTION_ADDRESS,
+            SYSTEM_ADDRESS->orthography.reverseSuffixes,
             compiledOrthographyContainer,
             &reverseAutoSuffixForSuffixDictionaryContainer.value,
             STENO_MAP_DICTIONARY_COLLECTION_ADDRESS->suffixes, ignoreSuffixes);
