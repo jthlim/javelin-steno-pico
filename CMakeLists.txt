@@ -104,6 +104,7 @@ target_sources(${NAME} PUBLIC
   javelin/asset_manager.cc
   javelin/base64.cc
   javelin/bit.cc
+  javelin/build_date.cc
   javelin/button_script.cc
   javelin/button_script_manager.cc
   javelin/console.cc

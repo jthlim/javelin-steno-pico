@@ -3,6 +3,7 @@
 #include "auto_draw.h"
 #include "console_report_buffer.h"
 #include "javelin/asset_manager.h"
+#include "javelin/build_date.h"
 #include "javelin/button_script_manager.h"
 #include "javelin/clock.h"
 #include "javelin/config_block.h"
@@ -66,6 +67,7 @@
 #define TRACE_RELEASE_PROCESSING_TIME 0
 #define ENABLE_DEBUG_COMMAND 0
 #define ENABLE_EXTRA_INFO 0
+#define ENABLE_TIME_COMMAND 0
 
 //---------------------------------------------------------------------------
 
@@ -163,7 +165,7 @@ static void PrintInfo_Binding(void *context, const char *commandLine) {
     Console::Printf("%02x", serialId[i]);
   }
   Console::Printf("\n");
-  Console::Printf("  Firmware: " __DATE__ " \n");
+  Console::Printf("  Firmware: %s\n", GetBuildDate());
   Console::Printf("  ");
   MainReportBuilder::instance.PrintInfo();
 
@@ -267,6 +269,26 @@ void SetStenoTrigger(void *context, const char *commandLine) {
 
   Console::SendOk();
   ButtonScriptManager::ExecuteScript(ButtonScriptId::STENO_MODE_UPDATE);
+}
+
+#include "../javelin-steno/arm/systick.h"
+void Time_Binding(void *context, const char *commandLine) {
+  const char *p = strchr(commandLine, ' ');
+  if (p == nullptr) {
+    Console::Printf("ERR No command specified");
+    return;
+  }
+
+  ++p;
+  sysTick->EnableCycleCount();
+  const uint32_t t0 = sysTick->ReadCycleCount();
+  Console::RunCommand(p, ConsoleWriter::instance);
+  const uint32_t t1 = sysTick->ReadCycleCount();
+
+  const uint32_t systemClockMhz =
+      frequency_count_mhz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
+  Console::Printf("Time: %u cycles, %u µs\n\n", t1 - t0,
+                  (t1 - t0) / systemClockMhz);
 }
 
 struct ParameterData {
@@ -504,6 +526,12 @@ void InitCommonCommands() {
                           ListParametersBinding, nullptr);
 
   Flash::AddConsoleCommands(console);
+
+#if ENABLE_TIME_COMMAND
+  console.RegisterCommand("time", "Measures execution time of command",
+                          &Time_Binding, nullptr);
+#endif
+
   Rgb::AddConsoleCommands(console);
   Bootloader::AddConsoleCommands(console);
   ButtonScriptManager::GetInstance().AddConsoleCommands(console);
