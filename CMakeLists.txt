@@ -207,7 +207,6 @@ target_sources(${NAME} PUBLIC
   javelin/unicode.cc
   javelin/unicode_script.cc
   javelin/utf8_pointer.cc
-  javelin/varint_writer.cc
   javelin/word_list.cc
   javelin/wpm_tracker.cc
   javelin/writer.cc
