@@ -415,10 +415,17 @@ static void GetStenoTrigger() {
   }
 }
 
+static void GetFirmwareBuildDate() {
+  Console::Printf("%s\n\n", GetBuildDate());
+}
+
 static constexpr DynamicParameterData DYNAMIC_PARAMETER_DATA[] = {
     {"available_asset_storage", &AssetManager::PrintFreeSize},
 #if JAVELIN_USE_EMBEDDED_STENO
     {"available_host_layouts", &HostLayouts::ListHostLayouts},
+#endif
+    {"firmware_build_date", &GetFirmwareBuildDate},
+#if JAVELIN_USE_EMBEDDED_STENO
     {"host_layout", &HostLayouts::GetHostLayout},
 #endif
     {"keyboard_protocol", &MainReportBuilder::GetKeyboardProtocol_Binding},
