@@ -165,7 +165,7 @@ static void PrintInfo_Binding(void *context, const char *commandLine) {
     Console::Printf("%02x", serialId[i]);
   }
   Console::Printf("\n");
-  Console::Printf("  Firmware: %s\n", GetBuildDate());
+  Console::Printf("  Firmware: Javelin %s\n", GetBuildDate());
   Console::Printf("  ");
   MainReportBuilder::instance.PrintInfo();
 
@@ -621,20 +621,6 @@ void InitJavelinMaster() {
         StenoReverseAutoSuffixDictionary(dictionary,
                                          compiledOrthographyContainer);
 
-    List<const uint8_t *> ignoreSuffixes;
-    for (const StenoOrthographyAutoSuffix &autoSuffix :
-         SYSTEM_ADDRESS->orthography.autoSuffixes) {
-      const uint8_t *p =
-          reverseMapDictionaryContainer->FindMapDataLookup(autoSuffix.text + 1);
-      if (p) {
-        ignoreSuffixes.AddIfUnique(p - 3);
-      }
-    }
-    ignoreSuffixes.Sort(
-        [](const uint8_t *const *a, const uint8_t *const *b) -> int {
-          return intptr_t(*a) - intptr_t(*b);
-        });
-
     dictionary =
         new (reverseSuffixDictionaryContainer) StenoReverseSuffixDictionary(
             dictionary,
@@ -642,7 +628,7 @@ void InitJavelinMaster() {
             SYSTEM_ADDRESS->orthography.reverseSuffixes,
             compiledOrthographyContainer,
             &reverseAutoSuffixForSuffixDictionaryContainer.value,
-            STENO_MAP_DICTIONARY_COLLECTION_ADDRESS->suffixes, ignoreSuffixes);
+            STENO_MAP_DICTIONARY_COLLECTION_ADDRESS->suffixes);
 
     dictionary = new (reverseAutoSuffixDictionaryContainer)
         StenoReverseAutoSuffixDictionary(dictionary,
