@@ -112,8 +112,6 @@ static JavelinStaticAllocate<StenoReverseAutoSuffixDictionary>
 static JavelinStaticAllocate<StenoReverseAutoSuffixDictionary>
     reverseAutoSuffixDictionaryContainer;
 static StenoProcessorElement *engineElement;
-
-static List<StenoDictionaryListEntry> dictionaries;
 #endif
 
 static JavelinStaticAllocate<StenoFirstUp> firstUpContainer;
@@ -593,6 +591,7 @@ void InitJavelinMaster() {
          sizeof(config->keyMap));
 
   // Setup dictionary list.
+  List<StenoDictionaryListEntry> dictionaries;
   // dictionaries.Add(
   //     StenoDictionaryListEntry(&StenoDebugDictionary::instance, true));
 
@@ -607,7 +606,8 @@ void InitJavelinMaster() {
   dictionaries.Add(
       StenoDictionaryListEntry(&StenoUnicodeDictionary::instance, true));
 
-  new (dictionaryListContainer) StenoDictionaryList(dictionaries);
+  new (dictionaryListContainer)
+      StenoDictionaryList((List<StenoDictionaryListEntry> &&)dictionaries);
   new (compiledOrthographyContainer)
       StenoCompiledOrthography(SYSTEM_ADDRESS->orthography);
 
