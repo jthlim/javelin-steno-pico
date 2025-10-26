@@ -111,9 +111,16 @@ void PicoEncoderState::CallScript(size_t encoderIndex, int delta) {
     return;
   }
 
+#if !defined(JAVELIN_ANALOG_DATA_COUNT)
+#define JAVELIN_ANALOG_DATA_COUNT 0
+#endif
+
   constexpr size_t ENCODER_SCRIPT_OFFSET = (2 + BUTTON_COUNT * 2);
   const size_t scriptIndex =
-      ENCODER_SCRIPT_OFFSET + 2 * encoderIndex + ((delta < 0) ? 1 : 0);
+      delta >= 0 ? ButtonScript::GetEncoderCWScriptIndex(
+                       BUTTON_COUNT, JAVELIN_ANALOG_DATA_COUNT, encoderIndex)
+                 : ButtonScript::GetEncoderCCWScriptIndex(
+                       BUTTON_COUNT, JAVELIN_ANALOG_DATA_COUNT, encoderIndex);
   ButtonScriptManager::GetInstance().ExecuteScriptIndex(
       scriptIndex, Clock::GetMilliseconds(), &delta, 1);
 }

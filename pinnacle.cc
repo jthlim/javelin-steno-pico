@@ -322,10 +322,13 @@ void Pinnacle::CallScript(size_t pointerIndex, const Pointer &pointer) {
 #define JAVELIN_ENCODER_COUNT 0
 #endif
 
-  constexpr size_t POINTER_SCRIPT_OFFSET =
-      (2 + 2 * BUTTON_COUNT + 2 * JAVELIN_ENCODER_COUNT);
-  const size_t scriptIndex = POINTER_SCRIPT_OFFSET + pointerIndex;
+#if !defined(JAVELIN_ANALOG_DATA_COUNT)
+#define JAVELIN_ANALOG_DATA_COUNT 0
+#endif
 
+  const size_t scriptIndex = ButtonScript::GetPointerScriptIndex(
+      BUTTON_COUNT, JAVELIN_ANALOG_DATA_COUNT, JAVELIN_ENCODER_COUNT,
+      pointerIndex);
   const intptr_t parameters[3] = {pointer.x, pointer.y, pointer.z};
 
   ButtonScriptManager::GetInstance().ExecuteScriptIndex(

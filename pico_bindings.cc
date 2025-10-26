@@ -300,7 +300,11 @@ struct DynamicParameterData {
 };
 
 static const ParameterData PARAMETER_DATA[] = {
+#if JAVELIN_ANALOG_INPUT
+    {"analog_input_count", (void *)ANALOG_INPUT_COUNT},
+#else
     {"analog_input_count", (void *)0},
+#endif
     {"button_count", (void *)BUTTON_COUNT},
 #if JAVELIN_USE_EMBEDDED_STENO
     {"dictionary_address", STENO_MAP_DICTIONARY_COLLECTION_ADDRESS},
