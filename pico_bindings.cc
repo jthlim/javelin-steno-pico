@@ -8,6 +8,7 @@
 #include "javelin/clock.h"
 #include "javelin/config_block.h"
 #include "javelin/console.h"
+#include "javelin/console_input_buffer.h"
 #include "javelin/dictionary/debug_dictionary.h"
 #include "javelin/dictionary/dictionary.h"
 #include "javelin/dictionary/dictionary_definition.h"
@@ -523,9 +524,9 @@ void Watchdog_Binding(void *context, const char *commandLine) {
 
 void InitCommonCommands() {
   Console &console = Console::instance;
-  console.RegisterCommand("info", "System information", PrintInfo_Binding,
-                          nullptr);
-  console.RegisterCommand("restart", "Restart the device", Restart_Binding,
+  console.RegisterCommand("info", "Prints system information",
+                          PrintInfo_Binding, nullptr);
+  console.RegisterCommand("restart", "Restarts the device", Restart_Binding,
                           nullptr);
   console.RegisterCommand("get_parameter",
                           "Gets the value of the specified parameter",
@@ -580,7 +581,13 @@ void InitCommonCommands() {
 #endif
 }
 
-void InitJavelinSlave() { InitCommonCommands(); }
+void InitJavelinSlave() {
+  InitCommonCommands();
+  Console &console = Console::instance;
+#if JAVELIN_SPLIT
+  ConsoleInputBuffer::AddConsoleCommands(console);
+#endif
+}
 
 void InitJavelinMaster() {
   const StenoConfigBlock *config = STENO_CONFIG_BLOCK_ADDRESS;
