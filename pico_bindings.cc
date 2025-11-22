@@ -650,6 +650,8 @@ void InitJavelinMaster() {
             dictionary,
             (const uint8_t *)STENO_MAP_DICTIONARY_COLLECTION_ADDRESS,
             STENO_MAP_DICTIONARY_COLLECTION_ADDRESS->prefixes);
+
+    dictionary = dictionaryListContainer->CreateCacheDictionary(dictionary);
   }
 
   // Set up processors.
