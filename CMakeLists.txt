@@ -193,6 +193,7 @@ target_sources(${NAME} PUBLIC
   javelin/split/split_serial_buffer.cc
   javelin/split/split_usb_status.cc
   javelin/split/split_version.cc
+  javelin/start_console_command_detector.cc
   javelin/state.cc
   javelin/steno_key_code.cc
   javelin/steno_key_code_buffer.cc
