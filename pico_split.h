@@ -59,7 +59,7 @@ private:
     void ResetRxDma();
     void OnReceiveFailed();
     void OnReceiveTimeout();
-    void OnReceiveSucceeded();
+    void OnReceiveSucceeded(bool sendNextPacket);
 
     bool ProcessReceive();
 

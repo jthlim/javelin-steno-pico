@@ -11,13 +11,10 @@ static ConnectionId consoleConnectionId = ConnectionId::ACTIVE;
 //---------------------------------------------------------------------------
 
 void ConsoleWriter::Write(const char *data, size_t length) {
-  if (PicoSerialPort::HasOpenSerialConsole() &&
+  if (PicoSerialPort::HasActiveSerialConsole() &&
       (consoleConnectionId == ConnectionId::ACTIVE ||
        consoleConnectionId == ConnectionId::SERIAL_CONSOLE)) {
     PicoSerialPort::SendSerialConsole(data, length);
-    if (consoleConnectionId == ConnectionId::ACTIVE) {
-      PicoSerialPort::Flush();
-    }
   } else {
     ConsoleReportBuffer::instance.SendData((const uint8_t *)data, length);
   }

@@ -52,6 +52,7 @@
 #include "ssd1306.h"
 #include "st7789.h"
 
+#include <array>
 #include <hardware/clocks.h>
 #include <hardware/flash.h>
 #include <hardware/spi.h>
@@ -479,14 +480,28 @@ void GetParameterBinding(void *context, const char *commandLine) {
 }
 
 void ListParametersBinding(void *context, const char *commandLine) {
-  Console::Printf("Static parameters\n");
-  for (const ParameterData &data : PARAMETER_DATA) {
-    Console::Printf("  • %s\n", data.name);
-  }
+  const ParameterData *staticParameter = std::begin(PARAMETER_DATA);
+  const ParameterData *staticEnd = std::end(PARAMETER_DATA);
 
-  Console::Printf(" \nDynamic parameters\n");
-  for (const DynamicParameterData &data : DYNAMIC_PARAMETER_DATA) {
-    Console::Printf("  • %s\n", data.name);
+  const DynamicParameterData *dynamicParameter =
+      std::begin(DYNAMIC_PARAMETER_DATA);
+  const DynamicParameterData *dynamicParameterEnd =
+      std::end(DYNAMIC_PARAMETER_DATA);
+
+  Console::Printf("Available parameters:\n");
+  while (staticParameter != staticEnd &&
+         dynamicParameter != dynamicParameterEnd) {
+    if (staticParameter == staticEnd) {
+      Console::Printf("• %s\n", dynamicParameter->name);
+      ++dynamicParameter;
+    } else if (dynamicParameter == dynamicParameterEnd ||
+               strcmp(staticParameter->name, dynamicParameter->name) < 0) {
+      Console::Printf("• %s\n", staticParameter->name);
+      ++staticParameter;
+    } else {
+      Console::Printf("• %s\n", dynamicParameter->name);
+      ++dynamicParameter;
+    }
   }
 
   Console::Printf("\n");

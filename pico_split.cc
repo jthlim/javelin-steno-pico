@@ -137,17 +137,17 @@ void PicoSplit::SplitData::Initialize() {
 
   dma3->source = &PIO_INSTANCE->rxf[RX_STATE_MACHINE_INDEX];
   constexpr PicoDmaControl receiveControl = {
-    .enable = true,
-    .dataSize = PicoDmaControl::DataSize::WORD,
-    .incrementRead = false,
-    .incrementWrite = true,
-    .chainToDma = 3,
+      .enable = true,
+      .dataSize = PicoDmaControl::DataSize::WORD,
+      .incrementRead = false,
+      .incrementWrite = true,
+      .chainToDma = 3,
 #if JAVELIN_SPLIT_TX_PIN == JAVELIN_SPLIT_RX_PIN
-    .transferRequest = PicoDmaTransferRequest::PIO0_RX0,
+      .transferRequest = PicoDmaTransferRequest::PIO0_RX0,
 #else
-    .transferRequest = PicoDmaTransferRequest::PIO0_RX1,
+      .transferRequest = PicoDmaTransferRequest::PIO0_RX1,
 #endif
-    .sniffEnable = false,
+      .sniffEnable = false,
   };
   dma3->control = receiveControl;
   if (!IsMaster()) {
@@ -239,11 +239,11 @@ void PicoSplit::SplitData::OnReceiveFailed() {
 
 void PicoSplit::SplitData::OnReceiveTimeout() { OnReceiveFailed(); }
 
-void PicoSplit::SplitData::OnReceiveSucceeded() {
+void PicoSplit::SplitData::OnReceiveSucceeded(bool sendNextPacket) {
   // Receiving succeeded without timeout means the previous transmit was
   // successful.
   // After receiving data, immediately start sending the data here.
-  updateSendData = true;
+  updateSendData = sendNextPacket;
   retryCount = 0;
   SendData();
 }
@@ -268,8 +268,7 @@ bool PicoSplit::SplitData::ProcessReceive() {
     if (rxBuffer.header.transferId == lastRxId) {
       metrics[SplitMetricId::REPEAT_DATA_COUNT]++;
 
-      // Repeat of the last, don't process the data again. Resend previous data.
-      SendData();
+      OnReceiveSucceeded(false);
       return true;
     }
 
@@ -284,7 +283,7 @@ bool PicoSplit::SplitData::ProcessReceive() {
     }
 
     rxBuffer.Process();
-    OnReceiveSucceeded();
+    OnReceiveSucceeded(true);
     break;
   }
 
