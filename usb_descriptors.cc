@@ -176,18 +176,18 @@ const uint8_t keyboardReportDescriptor[] = {
 
 const uint8_t consoleReportDescriptor[] = {
     // Console
-    0x06, 0x31, 0xFF, // HID_USAGE_PAGE(0xff31)
-    HID_USAGE(0x0074),
+    0x06, 0x4a, 0x4c, // HID_USAGE_PAGE("JL")
+    HID_USAGE(0x0001),
     HID_COLLECTION(HID_COLLECTION_APPLICATION),
     // Send
-      HID_USAGE(0x75),
+      HID_USAGE(2),
       HID_LOGICAL_MIN(0),
       HID_LOGICAL_MAX(255),
       HID_REPORT_COUNT(64),
       HID_REPORT_SIZE(8),
       HID_INPUT(HID_DATA | HID_VARIABLE | HID_ABSOLUTE),
     // Receive
-      HID_USAGE(0x76),
+      HID_USAGE(3),
       HID_LOGICAL_MIN(0),
       HID_LOGICAL_MAX(255),
       HID_REPORT_COUNT(64),
