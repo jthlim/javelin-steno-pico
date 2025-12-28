@@ -15,9 +15,6 @@ public:
   static bool HasActiveSerialConsole();
 
   static void OnSerialPortDisconnected();
-
-private:
-  static bool hasOpenSerialConsole;
 };
 
 //---------------------------------------------------------------------------

@@ -202,7 +202,6 @@ void DoMasterRunLoop() {
     Ws2812::Update();
     Ssd1306::Update();
     St7789::Update();
-    PicoSerialPort::Flush();
 
 #if JAVELIN_USE_WATCHDOG
     watchdog_update();

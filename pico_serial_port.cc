@@ -7,6 +7,7 @@
 #include "javelin/split/split_serial_buffer.h"
 #include "javelin/split/split_usb_status.h"
 #include "javelin/start_console_command_detector.h"
+#include "pico_split.h"
 #include <tusb.h>
 
 //---------------------------------------------------------------------------
@@ -43,7 +44,7 @@ void SerialPort::SendData(const void *data, size_t length) {
 
 //---------------------------------------------------------------------------
 
-static StartConsoleCommandDetector commandDetector;
+static StartConsoleCommandDetector startCommandDetector;
 
 void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
   if (!dtr) {
@@ -52,8 +53,8 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts) {
 }
 
 void PicoSerialPort::OnSerialPortDisconnected() {
-  commandDetector.Reset();
-  UsbStatus::instance.SetSerialConsoleActive(false);
+  SplitUsbStatus::instance.SetSerialConsoleActive(false);
+  startCommandDetector.Reset();
 }
 
 void PicoSerialPort::SendSerialConsole(const void *data, size_t length) {
@@ -87,33 +88,29 @@ void PicoSerialPort::HandleIncomingData() {
   for (uint8_t itf = 0; itf < CFG_TUD_CDC; itf++) {
     while (tud_cdc_n_available(itf)) {
       const uint32_t count = tud_cdc_n_read(itf, buffer, sizeof(buffer));
-      if (UsbStatus::instance.IsSerialConsoleActive()) {
-        if (Split::IsMaster()) {
-          ConsoleInputBuffer::Add(buffer, count, ConnectionId::SERIAL_CONSOLE);
-        } else {
-          ConsoleInputBuffer::Add(buffer, count,
-                                  ConnectionId::SERIAL_CONSOLE_PAIR);
-        }
+      if (SplitUsbStatus::GetLocalUsbStatus().IsSerialConsoleActive()) {
+        ConsoleInputBuffer::Add(buffer, count, ConnectionId::SERIAL_CONSOLE);
       } else {
         const size_t bufferUsedForStartCommand =
-            commandDetector.IsStartCommandPresent(buffer, count);
+            startCommandDetector.IsStartCommandPresent(buffer, count);
         if (bufferUsedForStartCommand != (size_t)-1) {
-          UsbStatus::instance.SetSerialConsoleActive(true);
+          SplitUsbStatus::instance.SetSerialConsoleActive(true);
           if (count > bufferUsedForStartCommand) {
-            if (Split::IsMaster()) {
-              ConsoleInputBuffer::Add(buffer + bufferUsedForStartCommand,
-                                      count - bufferUsedForStartCommand,
-                                      ConnectionId::SERIAL_CONSOLE);
-            } else {
-              ConsoleInputBuffer::Add(buffer + bufferUsedForStartCommand,
-                                      count - bufferUsedForStartCommand,
-                                      ConnectionId::SERIAL_CONSOLE_PAIR);
-            }
+            ConsoleInputBuffer::Add(buffer + bufferUsedForStartCommand,
+                                    count - bufferUsedForStartCommand,
+                                    ConnectionId::SERIAL_CONSOLE);
           }
         }
       }
     }
   }
+}
+
+//---------------------------------------------------------------------------
+
+void SplitSerialBuffer::SplitSerialBufferData::ClearQueue() {
+  tud_task();
+  PicoSplit::Update();
 }
 
 //---------------------------------------------------------------------------
