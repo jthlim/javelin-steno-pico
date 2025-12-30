@@ -108,9 +108,13 @@ void PicoSerialPort::HandleIncomingData() {
 
 //---------------------------------------------------------------------------
 
+#if JAVELIN_SPLIT
+
 void SplitSerialBuffer::SplitSerialBufferData::ClearQueue() {
   tud_task();
   PicoSplit::Update();
 }
+
+#endif
 
 //---------------------------------------------------------------------------
