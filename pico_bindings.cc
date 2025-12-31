@@ -464,7 +464,8 @@ void GetParameterBinding(void *context, const char *commandLine) {
 
   for (const ParameterData &data : PARAMETER_DATA) {
     if (Str::Eq(parameterName, data.name)) {
-      Console::Printf("0x%p\n\n", data.value);
+      Console::Printf(uintptr_t(data.value) <= 9 ? "%d\n\n" : "0x%p\n\n",
+                      data.value);
       return;
     }
   }
