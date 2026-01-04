@@ -490,7 +490,7 @@ void ListParametersBinding(void *context, const char *commandLine) {
       std::end(DYNAMIC_PARAMETER_DATA);
 
   Console::Printf("Available parameters:\n");
-  while (staticParameter != staticEnd &&
+  while (staticParameter != staticEnd ||
          dynamicParameter != dynamicParameterEnd) {
     if (staticParameter == staticEnd) {
       Console::Printf("• %s\n", dynamicParameter->name);
