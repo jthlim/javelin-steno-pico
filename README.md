@@ -28,7 +28,7 @@
 
    For rp2350 boards, add `-DPICO_PLATFORM=rp2350-arm-s`, e.g.,
 ```
-> cmake .. -DJAVELIN_BOARD=starboard_rp2350 -DPICO_PLATFORM=rp2350-arm-s
+> cmake .. -DJAVELIN_BOARD=starboard -DPICO_PLATFORM=rp2350-arm-s
 ```
 
 
@@ -49,10 +49,10 @@ your keyboard's hardware.
 
    Example configurations:
 
-   Type    | Direct Wired     | Matrix
-   --------|------------------|---------
-   Unibody | starboard_rp2040 | uni_v4
-   Split   | crkbd_v4         | crkbd_v3
+   Type    | Direct Wired | Matrix
+   --------|--------------|---------
+   Unibody | starboard    | uni_v4
+   Split   | crkbd_v4     | crkbd_v3
 
 3. Update your pin/button configuration there.
 
