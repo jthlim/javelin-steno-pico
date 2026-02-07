@@ -671,14 +671,15 @@ void InitJavelinMaster() {
   }
 
   // Set up processors.
-  StenoEngine *engine = new (StenoEngine::container) StenoEngine(
-      *dictionary, compiledOrthographyContainer, SYSTEM_ADDRESS->undoStroke,
+  StenoEngine *engine = new (StenoEngine::container)
+      StenoEngine(*dictionary, SYSTEM_ADDRESS, compiledOrthographyContainer,
+                  SYSTEM_ADDRESS->undoStroke,
 #if JAVELIN_USE_USER_DICTIONARY
-      userDictionary
+                  userDictionary
 #else
-      nullptr
+                  nullptr
 #endif
-  );
+      );
 
   engine->SetSpaceAfter(config->useSpaceAfter);
 #endif
