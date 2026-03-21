@@ -79,7 +79,7 @@ void Pinnacle::InitializeInternal() {
 #endif
   localPointerOffset = Split::IsLeft() ? 0 : JAVELIN_POINTER_LEFT_COUNT;
 #else // JAVELIN_SPLIT
-  localPointerCount = sizeof(POINTER_PINS) / sizeof(*POINTER_PINS);
+  localPointerCount = sizeof(PINNACLE_PINS) / sizeof(*PINNACLE_PINS);
 #endif
 
   spi_init(JAVELIN_POINTER_SPI, 12'500'000);
@@ -262,7 +262,7 @@ void Pinnacle::UpdateInternal() {
     }
   }
 
-#if JAVELIN_SPLIT && JAVELIN_SPLIT_IS_MASTER
+#if !JAVELIN_SPLIT || JAVELIN_SPLIT_IS_MASTER
   for (size_t i = 0; i < JAVELIN_POINTER_COUNT; ++i) {
     if (data[i].isDirty) {
       data[i].isDirty = false;
