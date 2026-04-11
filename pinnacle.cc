@@ -17,6 +17,9 @@
   (JAVELIN_POINTER_COUNT - JAVELIN_POINTER_LEFT_COUNT)
 #endif
 
+const int32_t PINNACLE_MID_X = 1024;
+const int32_t PINNACLE_MID_Y = 768;
+
 //---------------------------------------------------------------------------
 
 enum class PinnacleRegister : int {
@@ -247,8 +250,10 @@ void Pinnacle::UpdateInternal() {
         ClearFlags(chipSelectPin);
 
         Pointer newData;
-        newData.x = registerData[0] + ((registerData[2] & 0xf) << 8);
-        newData.y = registerData[1] + ((registerData[2] & 0xf0) << 4);
+        newData.x =
+            registerData[0] + ((registerData[2] & 0xf) << 8) - PINNACLE_MID_X;
+        newData.y =
+            registerData[1] + ((registerData[2] & 0xf0) << 4) - PINNACLE_MID_Y;
         newData.z = registerData[3] & 0x1f;
 
         if (newData != data[localPointerOffset + i].pointer) {

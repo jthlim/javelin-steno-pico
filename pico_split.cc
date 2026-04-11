@@ -253,7 +253,7 @@ bool PicoSplit::SplitData::ProcessReceive() {
   const size_t receivedWordCount =
       sizeof(RxBuffer) / sizeof(uint32_t) - dma3Count;
 
-  switch (rxBuffer.Validate(receivedWordCount, metrics)) {
+  switch (rxBuffer.Validate(receivedWordCount, metrics, true)) {
   case RxBufferValidateResult::CONTINUE:
     return false;
 
@@ -297,7 +297,7 @@ void PicoSplit::SplitData::SendData() {
 
   if (updateSendData) {
     updateSendData = false;
-    txBuffer.Build();
+    txBuffer.Build(true);
     txBuffer.header.transferId = ++txId;
   }
 
