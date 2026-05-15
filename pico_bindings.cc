@@ -25,6 +25,7 @@
 #include "javelin/hal/connection.h"
 #include "javelin/hal/display.h"
 #include "javelin/hal/rgb.h"
+#include "javelin/hal/rtc.h"
 #include "javelin/host_layout.h"
 #include "javelin/orthography.h"
 #include "javelin/processor/all_up.h"
@@ -428,6 +429,8 @@ static constexpr DynamicParameterData DYNAMIC_PARAMETER_DATA[] = {
 #if JAVELIN_USE_EMBEDDED_STENO
     {"available_host_layouts", &HostLayouts::ListHostLayouts},
 #endif
+    {"date_time", &RTC::GetDateTime_Binding},
+    {"date_time_valid", &RTC::GetDateTimeValid_Binding},
     {"firmware_build_date", &GetFirmwareBuildDate},
 #if JAVELIN_USE_EMBEDDED_STENO
     {"host_layout", &HostLayouts::GetHostLayout},
@@ -551,6 +554,7 @@ void InitCommonCommands() {
                           "Lists all available parameter names",
                           ListParametersBinding, nullptr);
 
+  RTC::AddConsoleCommands(console);
   Flash::AddConsoleCommands(console);
 
 #if ENABLE_TIME_COMMAND

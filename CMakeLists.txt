@@ -111,6 +111,7 @@ target_sources(${NAME} PUBLIC
   javelin/console_input_buffer.cc
   javelin/container/list.cc
   javelin/crc32.cc
+  javelin/date_time.cc
   javelin/dictionary/cache_dictionary.cc
   javelin/dictionary/compact_map_dictionary.cc
   javelin/dictionary/debug_dictionary.cc
@@ -156,6 +157,7 @@ target_sources(${NAME} PUBLIC
   javelin/hal/mouse.cc
   javelin/hal/power.cc
   javelin/hal/rgb.cc
+  javelin/hal/rtc.cc
   javelin/hal/sound.cc
   javelin/hal/usb_status.cc
   javelin/host_layout.cc
