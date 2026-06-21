@@ -59,15 +59,14 @@ void PicoSerialPort::OnSerialPortDisconnected() {
 
 void PicoSerialPort::SendSerialConsole(const void *data, size_t length) {
   if (tud_cdc_connected()) {
-    size_t written = tud_cdc_write(data, length);
     for (;;) {
+      const size_t written = tud_cdc_write(data, length);
       length -= written;
       if (length == 0) {
         break;
       }
       data = (uint8_t *)data + written;
       tud_task();
-      written = tud_cdc_write(data, length);
     }
   }
 }
@@ -110,9 +109,11 @@ void PicoSerialPort::HandleIncomingData() {
 
 #if JAVELIN_SPLIT
 
-void SplitSerialBuffer::SplitSerialBufferData::ClearQueue() {
-  tud_task();
-  PicoSplit::Update();
+void SplitSerialBuffer::SplitSerialBufferData::WaitUntilQueueIsNotFull() {
+  while (queue.IsFull()) {
+    tud_task();
+    PicoSplit::Update();
+  }
 }
 
 #endif

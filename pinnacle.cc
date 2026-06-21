@@ -1,16 +1,17 @@
 //---------------------------------------------------------------------------
 
 #include "pinnacle.h"
+
+//---------------------------------------------------------------------------
+
+#if JAVELIN_POINTER == 0x73a
+
 #include "javelin/button_script_manager.h"
 #include "javelin/clock.h"
 #include "javelin/console.h"
 
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
-
-//---------------------------------------------------------------------------
-
-#if JAVELIN_POINTER == 0x73a
 
 #if JAVELIN_SPLIT
 #define JAVELIN_POINTER_RIGHT_COUNT                                            \
@@ -219,12 +220,12 @@ int Pinnacle::ReadRegister(int chipSelectPin, PinnacleRegister reg) {
 }
 
 void Pinnacle::ReadRegisters(int chipSelectPin, PinnacleRegister startingReg,
-                             uint8_t *result, size_t length) {
+                             void *result, size_t length) {
   gpio_put(chipSelectPin, 0);
   const uint8_t writeData[3] = {uint8_t(0xa0 | (int)startingReg), 0xfc, 0xfc};
   spi_write_blocking(JAVELIN_POINTER_SPI, writeData, 3);
 
-  spi_read_blocking(JAVELIN_POINTER_SPI, 0xfc, result, length);
+  spi_read_blocking(JAVELIN_POINTER_SPI, 0xfc, (uint8_t *)result, length);
 
   gpio_put(chipSelectPin, 1);
 }
@@ -235,6 +236,16 @@ void Pinnacle::ClearFlags(int chipSelectPin) {
 
 //---------------------------------------------------------------------------
 
+struct PinnacleUpdateData {
+  uint8_t lowX;
+  uint8_t lowY;
+  uint8_t highX : 4;
+  uint8_t highY : 4;
+  uint8_t z : 6;
+  uint8_t _unused : 2;
+};
+static_assert(sizeof(PinnacleUpdateData) == 4);
+
 void Pinnacle::UpdateInternal() {
   if (available) {
     for (size_t i = 0; i < localPointerCount; ++i) {
@@ -244,17 +255,15 @@ void Pinnacle::UpdateInternal() {
       // Check for data ready
       const int status = ReadRegister(chipSelectPin, PinnacleRegister::STATUS);
       if ((status & 4) != 0) {
-        uint8_t registerData[4];
-        ReadRegisters(chipSelectPin, PinnacleRegister::PACKET_BYTE_2,
-                      registerData, 4);
+        PinnacleUpdateData response;
+        ReadRegisters(chipSelectPin, PinnacleRegister::PACKET_BYTE_2, &response,
+                      sizeof(response));
         ClearFlags(chipSelectPin);
 
         Pointer newData;
-        newData.x =
-            registerData[0] + ((registerData[2] & 0xf) << 8) - PINNACLE_MID_X;
-        newData.y =
-            registerData[1] + ((registerData[2] & 0xf0) << 4) - PINNACLE_MID_Y;
-        newData.z = registerData[3] & 0x1f;
+        newData.x = (response.lowX + (response.highX << 8)) - PINNACLE_MID_X;
+        newData.y = (response.lowY + (response.highY << 8)) - PINNACLE_MID_Y;
+        newData.z = response.z;
 
         if (newData != data[localPointerOffset + i].pointer) {
           data[localPointerOffset + i].isDirty = true;

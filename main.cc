@@ -197,11 +197,11 @@ void DoMasterRunLoop() {
     PicoSerialPort::HandleIncomingData();
     PicoMidi::HandleIncomingData();
 
-    FlushBuffers();
     ConsoleInputBuffer::Process();
     Ws2812::Update();
     Ssd1306::Update();
     St7789::Update();
+    FlushBuffers();
 
 #if JAVELIN_USE_WATCHDOG
     watchdog_update();
@@ -221,19 +221,20 @@ void DoSlaveRunLoop() {
     StartInterruptUpdate();
 
     tud_task(); // tinyusb device task
+
     SlaveTask::container->Update();
     PicoSplit::Update();
     PicoSerialPort::HandleIncomingData();
     PicoMidi::HandleIncomingData();
 
     SplitHidReportBuffer::Update();
-    FlushBuffers();
     ConsoleInputBuffer::Process();
     Ws2812::Update();
     Ssd1306::Update();
     St7789::Update();
     SplitConsole::Process();
     PicoSerialPort::Flush();
+    FlushBuffers();
 
 #if JAVELIN_USE_WATCHDOG
     watchdog_update();

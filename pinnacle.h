@@ -56,7 +56,7 @@ public:
   static void WriteRegister(int chipSelectPin, PinnacleRegister reg, int value);
   static int ReadRegister(int chipSelectPin, PinnacleRegister reg);
   static void ReadRegisters(int chipSelectPin, PinnacleRegister startingReg,
-                            uint8_t *result, size_t length);
+                            void *result, size_t length);
 
   static void ClearFlags(int chipSelectPin);
 

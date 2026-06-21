@@ -219,38 +219,6 @@ void Restart_Binding(void *context, const char *commandLine) {
   watchdog_reboot(0, 0, 0);
 }
 
-void SetStenoMode(void *context, const char *commandLine) {
-  const char *stenoMode = strchr(commandLine, ' ');
-  if (!stenoMode) {
-    Console::Printf("ERR No steno mode specified\n\n");
-    return;
-  }
-
-  ++stenoMode;
-#if JAVELIN_USE_EMBEDDED_STENO
-  if (Str::Eq(stenoMode, "embedded")) {
-    passthroughContainer->SetNext(engineElement);
-  } else
-#endif
-      if (Str::Eq(stenoMode, "gemini")) {
-    passthroughContainer->SetNext(&gemini);
-  } else if (Str::Eq(stenoMode, "tx_bolt")) {
-    passthroughContainer->SetNext(&txBolt);
-  } else if (Str::Eq(stenoMode, "passport")) {
-    passthroughContainer->SetNext(&passport);
-  } else if (Str::Eq(stenoMode, "procat")) {
-    passthroughContainer->SetNext(&procat);
-  } else if (Str::Eq(stenoMode, "plover_hid")) {
-    passthroughContainer->SetNext(&ploverHid);
-  } else {
-    Console::Printf("ERR Unable to set steno mode: \"%s\"\n\n", stenoMode);
-    return;
-  }
-
-  Console::SendOk();
-  ButtonScriptManager::ExecuteScript(ButtonScriptId::STENO_MODE_UPDATE);
-}
-
 void SetStenoTrigger(void *context, const char *commandLine) {
   const char *trigger = strchr(commandLine, ' ');
   if (!trigger) {
@@ -381,26 +349,69 @@ static void GetStrokeCount() {
 }
 #endif
 
+struct StenoModeData {
+  StenoProcessorElement *processor;
+  const char *name;
+};
+
+const StenoModeData STENO_MODE_DATA[] = {
+    {&gemini, "gemini"},        //
+    {&txBolt, "tx_bolt"},       //
+    {&passport, "passport"},    //
+    {&procat, "procat"},        //
+    {&ploverHid, "plover_hid"}, //
+};
+
 static void GetStenoMode() {
   const StenoProcessorElement *processor = passthroughContainer->GetNext();
+
 #if JAVELIN_USE_EMBEDDED_STENO
   if (processor == engineElement) {
     Console::Printf("embedded\n\n");
+    return;
+  }
+#endif
+
+  for (const StenoModeData &data : STENO_MODE_DATA) {
+    if (processor == data.processor) {
+      Console::Printf("%s\n\n", data.name);
+      return;
+    }
+  }
+
+  Console::Printf("ERR Internal consistency error\n\n");
+}
+
+bool SetStenoMode(const char *name) {
+  for (const StenoModeData &data : STENO_MODE_DATA) {
+    if (Str::Eq(name, data.name)) {
+      passthroughContainer->SetNext(data.processor);
+      return true;
+    }
+  }
+  return false;
+}
+
+void SetStenoMode(void *context, const char *commandLine) {
+  const char *stenoMode = strchr(commandLine, ' ');
+  if (!stenoMode) {
+    Console::Printf("ERR No steno mode specified\n\n");
+    return;
+  }
+
+  ++stenoMode;
+#if JAVELIN_USE_EMBEDDED_STENO
+  if (Str::Eq(stenoMode, "embedded")) {
+    passthroughContainer->SetNext(engineElement);
   } else
 #endif
-      if (processor == &gemini) {
-    Console::Printf("gemini\n\n");
-  } else if (processor == &txBolt) {
-    Console::Printf("tx_bolt\n\n");
-  } else if (processor == &passport) {
-    Console::Printf("passport\n\n");
-  } else if (processor == &procat) {
-    Console::Printf("procat\n\n");
-  } else if (processor == &ploverHid) {
-    Console::Printf("plover_hid\n\n");
-  } else {
-    Console::Printf("ERR Internal consistency error\n\n");
+      if (!SetStenoMode(stenoMode)) {
+    Console::Printf("ERR Unable to set steno mode: \"%s\"\n\n", stenoMode);
+    return;
   }
+
+  Console::SendOk();
+  ButtonScriptManager::ExecuteScript(ButtonScriptId::STENO_MODE_UPDATE);
 }
 
 #if JAVELIN_USE_EMBEDDED_STENO
@@ -782,7 +793,7 @@ void ButtonScript::CancelAllStenoKeys() {
 
 void FlushBuffers() {
   MainReportBuilder::instance.FlushAllIfRequired();
-  ConsoleReportBuffer::instance.Flush();
+  Console::Flush();
 }
 
 //---------------------------------------------------------------------------

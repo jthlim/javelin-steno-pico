@@ -2,6 +2,7 @@
 
 #pragma once
 #include "hid_report_buffer.h"
+#include "javelin/container/static_list.h"
 #include "javelin/mem.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -16,6 +17,9 @@ struct MainReportBuilder {
 public:
   void Press(uint8_t key);
   void Release(uint8_t key);
+
+  void PressConsumerPageCode(uint32_t code);
+  void ReleaseConsumerPageCode(uint32_t code);
 
   void PressMouseButton(size_t buttonIndex);
   void ReleaseMouseButton(size_t buttonIndex);
@@ -63,6 +67,11 @@ private:
       uint16_t presenceFlags16[16];
       uint32_t presenceFlags32[8];
     };
+
+    uint32_t presence;
+
+    bool HasData() const { return presence != 0; }
+    void Reset();
   };
 
   struct MouseBuffer {
@@ -97,6 +106,15 @@ private:
     bool HasData() const { return (movementMask | buttonPresence) != 0; }
   };
 
+  struct ConsumerPageBuffer {
+    StaticList<uint16_t, 8> scanCodes;
+
+    bool AddScanCode(uint32_t code);
+    bool RemoveScanCode(uint32_t code);
+    void Reset() { scanCodes.Reset(); }
+    void BuildConsumerPageReport(uint8_t (&reportData)[16]) const;
+  };
+
   bool compatibilityMode = false;
   uint8_t modifiers = 0;
   uint8_t maxPressIndex = 0;
@@ -104,15 +122,16 @@ private:
   int wpmTally = 0;
   Buffer buffers[2];
   MouseBuffer mouseBuffers[2];
+  ConsumerPageBuffer consumerPageBuffer;
 
   static constexpr size_t MAXIMUM_REPORT_DATA_SIZE = 17;
   HidReportBuffer<MAXIMUM_REPORT_DATA_SIZE> reportBuffer;
 
-  bool HasData() const;
+  bool HasData() const { return buffers[0].HasData(); }
   bool HasMouseData() const { return mouseBuffers[0].HasData(); }
-  void SendKeyboardPageReportIfRequired();
-  void SendConsumerPageReportIfRequired();
-  void SendMousePageReportIfRequired();
+  void SendKeyboardPageReport();
+  void SendConsumerPageReport();
+  void SendMousePageReport();
 
   void SendReport(uint8_t reportId, const uint8_t *data, size_t size);
 
