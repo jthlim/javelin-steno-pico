@@ -210,6 +210,7 @@ target_sources(${NAME} PUBLIC
   javelin/stroke_list_parser.cc
   javelin/system.cc
   javelin/timer_manager.cc
+  javelin/totp.cc
   javelin/unicode.cc
   javelin/unicode_script.cc
   javelin/utf8_pointer.cc

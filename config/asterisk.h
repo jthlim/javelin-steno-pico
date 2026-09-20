@@ -11,6 +11,7 @@
 
 #define BOOTSEL_BUTTON_INDEX 26
 
+#define JAVELIN_DEBOUNCE_MS 10
 #define JAVELIN_BUTTON_MATRIX 0
 #define JAVELIN_BUTTON_TOUCH 1
 
@@ -21,7 +22,8 @@ constexpr uint8_t BUTTON_TOUCH_PINS[26] = {
    9,  8,  7,  6,     /**/     14, 19, 18, 17, 16,
               10, 11, /**/ 12, 13,
 };
-constexpr float BUTTON_TOUCH_THRESHOLD = 1.30f;
+constexpr float BUTTON_TOUCH_PRESS_THRESHOLD = 1.3f;
+constexpr float BUTTON_TOUCH_RELEASE_THRESHOLD = 1.2f;
 // clang-format on
 
 #define JAVELIN_SCRIPT_CONFIGURATION                                           \

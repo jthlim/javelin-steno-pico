@@ -61,7 +61,21 @@ constexpr size_t ROW_PIN_COUNT = sizeof(ROW_PINS);
 #endif // JAVELIN_BUTTON_MATRIX
 
 #if JAVELIN_BUTTON_TOUCH
-uint32_t touchPadThreshold[sizeof(BUTTON_TOUCH_PINS)];
+struct ButtonTouchData {
+  bool wasTouched;
+  uint32_t pressThreshold;
+  uint32_t releaseThreshold;
+
+  void SetThresholds() {
+    releaseThreshold =
+        pressThreshold * (int)(BUTTON_TOUCH_RELEASE_THRESHOLD * 1024) >> 12;
+
+    pressThreshold =
+        pressThreshold * (int)(BUTTON_TOUCH_PRESS_THRESHOLD * 1024) >> 12;
+  }
+};
+
+ButtonTouchData touchData[sizeof(BUTTON_TOUCH_PINS)];
 #if !defined(JAVELIN_TOUCH_CALIBRATION_COUNT)
 #define JAVELIN_TOUCH_CALIBRATION_COUNT 5
 #endif
@@ -137,13 +151,12 @@ void PicoButtonState::Initialize() {
     ReadTouchCounters(counters);
 
     for (size_t j = 0; j < sizeof(BUTTON_TOUCH_PINS); ++j) {
-      touchPadThreshold[j] += counters[j];
+      touchData[j].pressThreshold += counters[j];
     }
   }
 
   for (size_t j = 0; j < sizeof(BUTTON_TOUCH_PINS); ++j) {
-    touchPadThreshold[j] =
-        touchPadThreshold[j] * (int)(BUTTON_TOUCH_THRESHOLD * 256) >> 10;
+    touchData[j].SetThresholds();
   }
 
 #endif
@@ -204,20 +217,24 @@ void PicoButtonState::ReadTouchCounters(uint32_t *counters) {
   gpio_put_masked(BUTTON_TOUCH_PIN_MASK, BUTTON_TOUCH_PIN_MASK);
 
   // This is a ~100us wait.
-  for (int i = 0; i < 1250; ++i) {
+  for (int i = 0; i < 2000; ++i) {
     asm volatile("" ::: "memory");
   }
 
   for (size_t i = 0; i < sizeof(BUTTON_TOUCH_PINS); ++i) {
     const uint8_t pin = BUTTON_TOUCH_PINS[i];
+    size_t counter = 0;
+
+    const uint32_t interrupts = save_and_disable_interrupts();
     gpio_set_dir(pin, false);
 
-    size_t counter = 0;
     for (; counter < 100000; ++counter) {
       if (!gpio_get(pin)) {
         break;
       }
     }
+
+    restore_interrupts(interrupts);
     counters[i] = counter;
   }
 }
@@ -291,7 +308,15 @@ ButtonState PicoButtonState::ReadInternal() {
   ReadTouchCounters(counters);
 
   for (size_t i = 0; i < sizeof(BUTTON_TOUCH_PINS); ++i) {
-    const bool isTouched = counters[i] > touchPadThreshold[i];
+    ButtonTouchData &data = touchData[i];
+
+    bool isTouched;
+    if (data.wasTouched) {
+      isTouched = counters[i] > data.releaseThreshold;
+    } else {
+      isTouched = counters[i] > data.pressThreshold;
+    }
+    data.wasTouched = isTouched;
     if (isTouched) {
       state.Set(i);
     }

@@ -20,7 +20,8 @@ constexpr uint8_t BUTTON_TOUCH_PINS[26] = {
    9,  7,  5,  4,     /**/     21, 20, 18, 16, 13,
               10, 11, /**/ 15, 14,
 };
-constexpr float BUTTON_TOUCH_THRESHOLD = 1.20f;
+constexpr float BUTTON_TOUCH_PRESS_THRESHOLD = 1.3f;
+constexpr float BUTTON_TOUCH_RELEASE_THRESHOLD = 1.2f;
 // clang-format on
 
 #define JAVELIN_SCRIPT_CONFIGURATION                                           \
