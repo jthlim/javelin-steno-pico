@@ -137,8 +137,8 @@ target_sources(${NAME} PUBLIC
   javelin/dictionary/user_dictionary.cc
   javelin/dictionary/wrapped_dictionary.cc
   javelin/engine_add_translation_mode.cc
+  javelin/engine_alt_mode.cc
   javelin/engine_binding.cc
-  javelin/engine_console_mode.cc
   javelin/engine_normal_mode.cc
   javelin/engine.cc
   javelin/flash.cc
@@ -203,6 +203,7 @@ target_sources(${NAME} PUBLIC
   javelin/steno_key_code_buffer.cc
   javelin/steno_key_code_buffer_functions.cc
   javelin/steno_key_code_emitter.cc
+  javelin/steno_key_code_emitter_hid_writer.cc
   javelin/steno_key_state.cc
   javelin/str.cc
   javelin/stroke.cc

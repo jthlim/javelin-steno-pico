@@ -70,7 +70,7 @@
 #define TRACE_RELEASE_PROCESSING_TIME 0
 #define ENABLE_DEBUG_COMMAND 0
 #define ENABLE_EXTRA_INFO 0
-#define ENABLE_TIME_COMMAND 0
+#define ENABLE_TIME_COMMAND 1
 
 //---------------------------------------------------------------------------
 
@@ -251,10 +251,11 @@ void Time_Binding(void *context, const char *commandLine) {
   Console::RunCommand(p, ConsoleWriter::instance);
   const uint32_t t1 = sysTick->ReadCycleCount();
 
+  const uint32_t delta = (t1 - t0) & 0xffffff;
+
   const uint32_t systemClockMhz =
       frequency_count_mhz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
-  Console::Printf("Time: %u cycles, %u µs\n\n", t1 - t0,
-                  (t1 - t0) / systemClockMhz);
+  Console::Printf("Time: %u cycles, %u µs\n\n", delta, delta / systemClockMhz);
 }
 
 struct ParameterData {
