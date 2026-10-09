@@ -254,7 +254,7 @@ const uint8_t MAIN_CONFIGURATION_DESCRIPTOR[] = {
 
     // Interface number, string index, protocol, report descriptor len, EP In
     // address, size & polling interval
-    TUD_HID_DESCRIPTOR(ITF_NUM_KEYBOARD, 0, HID_ITF_PROTOCOL_KEYBOARD,
+    TUD_HID_DESCRIPTOR(ITF_NUM_KEYBOARD, 0, HID_ITF_PROTOCOL_NONE,
                        sizeof(keyboardReportDescriptor), EPNUM_KEYBOARD,
                        CFG_KEYBOARD_BUFSIZE, 1),
 
