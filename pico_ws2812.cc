@@ -61,7 +61,7 @@ void Ws2812::Initialize() {
 
   // clang-format off
 #if JAVELIN_SPLIT
-  #if JAVELIN_LEFT_COUNT == JAVELIN_RIGHT_COUNT
+  #if JAVELIN_RGB_LEFT_COUNT == JAVELIN_RGB_RIGHT_COUNT
     dma1->count = JAVELIN_RGB_LEFT_COUNT;
   #else
     dma1->count = Split::IsLeft() ? JAVELIN_RGB_LEFT_COUNT

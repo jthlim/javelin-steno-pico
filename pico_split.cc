@@ -333,23 +333,13 @@ void PicoSplit::SplitData::PrintInfo() {
   const uint32_t systemClockMhz =
       frequency_count_mhz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
 
-  Console::Printf("Split data: %d Mbps\n",
+  Console::Printf("  Cable: %d Mbps\n",
                   systemClockMhz / JAVELIN_SPLIT_PIO_CYCLES);
-  Console::Printf("  Transmitted bytes/packets: %llu/%llu\n", 4 * txWords,
+  Console::Printf("    Transmitted bytes/packets: %llu/%llu\n", 4 * txWords,
                   txIrqCount);
-  Console::Printf("  Received bytes/packets: %llu/%llu\n", 4 * rxWords,
+  Console::Printf("    Received bytes/packets: %llu/%llu\n", 4 * rxWords,
                   rxPacketCount);
-  Console::Printf("  Transmit types:");
-  for (size_t count : TxBuffer::txPacketTypeCounts) {
-    Console::Printf(" %zu", count);
-  }
-  Console::Printf("\n");
-  Console::Printf("  Receive types:");
-  for (uint32_t count : RxBuffer::rxPacketTypeCounts) {
-    Console::Printf(" %u", count);
-  }
-  Console::Printf("\n");
-  Console::Printf("  Metrics:");
+  Console::Printf("    Metrics:");
   for (size_t i = 0; i < SplitMetricId::COUNT; ++i) {
     Console::Printf(" %zu", metrics[i]);
   }

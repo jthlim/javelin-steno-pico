@@ -24,7 +24,7 @@ void PicoCrc32::Initialize() {
 
 uint32_t PicoCrc32::Hash(const void *data, size_t length, PicoDma *dma) {
 #if JAVELIN_THREADS
-  spinlock18->Lock();
+  spinlock8->Lock();
 #endif
 
   dma->source = data;
@@ -63,7 +63,7 @@ uint32_t PicoCrc32::Hash(const void *data, size_t length, PicoDma *dma) {
   const uint32_t value = sniff->data;
 
 #if JAVELIN_THREADS
-  spinlock18->Unlock();
+  spinlock8->Unlock();
 #endif
 
   return value;

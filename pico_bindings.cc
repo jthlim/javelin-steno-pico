@@ -186,7 +186,11 @@ static void PrintInfo_Binding(void *context, const char *commandLine) {
 
   Flash::PrintInfo();
   HidReportBufferBase::PrintInfo();
+#if JAVELIN_SPLIT
+  Console::Printf("Split\n");
   PicoSplit::PrintInfo();
+  Split::PrintPacketTypeInfo();
+#endif
 
 #if ENABLE_EXTRA_INFO
   ButtonScriptManager::GetInstance().PrintInfo();

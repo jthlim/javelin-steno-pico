@@ -394,7 +394,10 @@ void MainReportBuilder::SetKeyboardProtocol_Binding(void *context,
   if (Unicode::IsAsciiDigit(*keyboardProtocol)) {
     const char *p = Str::ParseInteger(&delay, keyboardProtocol);
     if (p) {
-      keyboardProtocol = p + 1;
+      if (*p) {
+        ++p;
+      }
+      keyboardProtocol = p;
     }
   }
 

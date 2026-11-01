@@ -7,8 +7,8 @@
 
 #if USE_ORTHOGRAPHY_CACHE
 
-void StenoCompiledOrthography::LockCache() { spinlock19->Lock(); }
-void StenoCompiledOrthography::UnlockCache() { spinlock19->Unlock(); }
+void StenoCompiledOrthography::LockCache() { spinlock9->Lock(); }
+void StenoCompiledOrthography::UnlockCache() { spinlock9->Unlock(); }
 
 #endif
 

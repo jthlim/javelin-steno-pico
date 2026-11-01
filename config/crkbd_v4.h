@@ -31,6 +31,7 @@ struct StenoDictionaryCollection;
 // #define JAVELIN_SPLIT_SIDE_PIN xx
 #define JAVELIN_SPLIT_TX_RX_BUFFER_SIZE 512
 
+#define JAVELIN_DEBOUNCE_MS 10
 #define JAVELIN_BUTTON_MATRIX 0
 #define JAVELIN_BUTTON_PINS 1
 

@@ -98,7 +98,8 @@ void PicoEncoderState::InitializeInternal() {
   busy_wait_us_32(20);
 
   for (size_t i = 0; i < localEncoderCount; ++i) {
-    lastEncoderStates[i] = ENCODER_PINS[i + localEncoderOffset].ReadState();
+    lastEncoderStates[i + localEncoderOffset] =
+        ENCODER_PINS[i + localEncoderOffset].ReadState();
   }
 
   for (size_t i = 0; i < JAVELIN_ENCODER_COUNT; ++i) {
@@ -266,7 +267,7 @@ void PicoEncoderState::SetEncoderConfiguration_Binding(
 
   const char *p = strchr(commandLine, ' ');
   if (!p) {
-    Console::Printf("ERR missing encoder index and configuration data\n%s\n",
+    Console::Printf("ERR Missing encoder index and configuration data\n%s\n",
                     instructions);
     return;
   }
@@ -274,24 +275,24 @@ void PicoEncoderState::SetEncoderConfiguration_Binding(
   int index;
   p = Str::ParseInteger(&index, p + 1, false);
   if (!p) {
-    Console::Printf("ERR unable to parse encoder index\n\n");
+    Console::Printf("ERR Unable to parse encoder index\n\n");
     return;
   }
 
   if (*p != ' ') {
-    Console::Printf("ERR missing configuration data\n%s\n", instructions);
+    Console::Printf("ERR Missing configuration data\n%s\n", instructions);
     return;
   }
 
   uint8_t decodeBuffer[256];
   const size_t byteCount = Base64::Decode(decodeBuffer, (const uint8_t *)p + 1);
   if (byteCount != 16) {
-    Console::Printf("ERR bad configuration data\n%s\n", instructions);
+    Console::Printf("ERR Bad configuration data\n%s\n", instructions);
     return;
   }
 
   if (!instance.SetConfiguration(index, (int8_t *)decodeBuffer)) {
-    Console::Printf("ERR unable to set configuration\n\n");
+    Console::Printf("ERR Unable to set configuration\n\n");
     return;
   }
 

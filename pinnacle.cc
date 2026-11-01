@@ -320,7 +320,12 @@ void Pinnacle::UpdateBuffer(TxBuffer &buffer) {
     return;
   }
 
-  if (buffer.Add(SplitHandlerId::POINTER, &data[localPointerOffset].pointer,
+  Pointer transmitData[localPointerCount];
+  for (size_t i = 0; i < localPointerCount; ++i) {
+    transmitData[i] = data[localPointerOffset + i].pointer;
+  }
+
+  if (buffer.Add(SplitHandlerId::POINTER, transmitData,
                  sizeof(Pointer) * localPointerCount)) {
     for (size_t i = 0; i < localPointerCount; ++i) {
       data[localPointerOffset + i].isDirty = false;
