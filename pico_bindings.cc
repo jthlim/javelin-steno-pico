@@ -241,7 +241,7 @@ void SetStenoTrigger(void *context, const char *commandLine) {
   ButtonScriptManager::ExecuteScript(ButtonScriptId::STENO_MODE_UPDATE);
 }
 
-#include "../javelin-steno/arm/systick.h"
+#include "javelin/arm/systick.h"
 void Time_Binding(void *context, const char *commandLine) {
   const char *p = strchr(commandLine, ' ');
   if (p == nullptr) {
